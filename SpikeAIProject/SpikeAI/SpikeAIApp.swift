@@ -9,6 +9,8 @@ import SwiftUI
 import UIKit
 import UserNotifications
 
+// Test comment for verifying the Git history workflow — safe to delete.
+
 // MARK: - Notification Delegate
 
 /// Ensures notifications are displayed even when the app is in the foreground.
