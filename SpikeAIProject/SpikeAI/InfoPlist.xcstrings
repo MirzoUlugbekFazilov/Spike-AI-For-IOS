@@ -1,0 +1,161 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Spike AI"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "ar" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "يستخدم Spike AI الكاميرا للتحقق من فتح القفل بالحركة في وضع التمرين."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI verwendet die Kamera, um Bewegungs-Entsperrungen im Sweat-Modus zu überprüfen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI uses the camera to verify Sweat Mode movement unlocks."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI utiliza la cámara para verificar los desbloqueos de movimiento en el Modo Sudor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI utilise la caméra pour vérifier les déverrouillages par mouvement en Mode Sweat."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI स्वेट मोड में मूवमेंट अनलॉक की पुष्टि के लिए कैमरे का उपयोग करता है।"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI menggunakan kamera untuk memverifikasi pembukaan kunci gerakan di Mode Sweat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI utilizza la fotocamera per verificare gli sblocchi con movimento nella modalità Sweat."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI はスウェットモードの動きによるロック解除を確認するためにカメラを使用します。"
+          }
+        },
+        "kk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI Sweat режимінде қозғалыспен құлыпты ашуды тексеру үшін камераны пайдаланады."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI는 스웨트 모드에서 움직임 잠금 해제를 확인하기 위해 카메라를 사용합니다."
+          }
+        },
+        "ms" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI menggunakan kamera untuk mengesahkan buka kunci pergerakan dalam Mod Sweat."
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI gebruikt de camera om bewegingsontgrendelingen in de Sweat-modus te verifiëren."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI używa kamery do weryfikacji odblokowania ruchem w trybie Sweat."
+          }
+        },
+        "pt" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Spike AI usa a câmera para verificar os desbloqueios por movimento no Modo Suor."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI использует камеру для проверки разблокировки движением в режиме Sweat."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI använder kameran för att verifiera rörelseavlåsningar i Sweat-läget."
+          }
+        },
+        "tg" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI камераро барои тасдиқи кушодани қулф бо ҳаракат дар режими Sweat истифода мебарад."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI, Ter Modunda hareketle kilit açmayı doğrulamak için kamerayı kullanır."
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI використовує камеру для перевірки розблокування рухом у режимі Sweat."
+          }
+        },
+        "uz" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI Sweat rejimida harakat orqali qulfni ochishni tekshirish uchun kameradan foydalanadi."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI sử dụng camera để xác minh mở khóa bằng chuyển động trong Chế độ Sweat."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spike AI 使用相机来验证运动模式中的运动解锁。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

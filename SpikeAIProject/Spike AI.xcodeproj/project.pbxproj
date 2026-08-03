@@ -1,0 +1,1274 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2D9107CB2FA924F700F379AD /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 2D9107CA2FA924F700F379AD /* Supabase */; };
+		2DD733642FC3ADFF00BC2CB1 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DD733632FC3ADFF00BC2CB1 /* WidgetKit.framework */; };
+		2DD733662FC3ADFF00BC2CB1 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DD733652FC3ADFF00BC2CB1 /* SwiftUI.framework */; };
+		2DD733772FC3AE0000BC2CB1 /* SpikeAILiveActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 2DD733612FC3ADFF00BC2CB1 /* SpikeAILiveActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CC00040000000000000000A2 /* SpikeAIShield.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CC00010000000000000000A1 /* SpikeAIShield.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CC00040000000000000000A3 /* SpikeAIShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CC00020000000000000000A1 /* SpikeAIShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		CC00040000000000000000A4 /* SpikeAIMonitor.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CC00030000000000000000A1 /* SpikeAIMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2D9107A92FA91E1F00F379AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2D9107932FA91E1E00F379AD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2D91079A2FA91E1E00F379AD;
+			remoteInfo = "Spike AI";
+		};
+		2D9107B32FA91E1F00F379AD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2D9107932FA91E1E00F379AD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2D91079A2FA91E1E00F379AD;
+			remoteInfo = "Spike AI";
+		};
+		2DD733752FC3AE0000BC2CB1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2D9107932FA91E1E00F379AD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2DD733602FC3ADFF00BC2CB1;
+			remoteInfo = SpikeAILiveActivityExtension;
+		};
+		CC00010000000000000000AA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2D9107932FA91E1E00F379AD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CC00010000000000000000A6;
+			remoteInfo = SpikeAIShield;
+		};
+		CC00020000000000000000AA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2D9107932FA91E1E00F379AD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CC00020000000000000000A6;
+			remoteInfo = SpikeAIShieldAction;
+		};
+		CC00030000000000000000AA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2D9107932FA91E1E00F379AD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CC00030000000000000000A6;
+			remoteInfo = SpikeAIMonitor;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		CC00040000000000000000A1 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				CC00040000000000000000A2 /* SpikeAIShield.appex in Embed Foundation Extensions */,
+				CC00040000000000000000A3 /* SpikeAIShieldAction.appex in Embed Foundation Extensions */,
+				2DD733772FC3AE0000BC2CB1 /* SpikeAILiveActivityExtension.appex in Embed Foundation Extensions */,
+				CC00040000000000000000A4 /* SpikeAIMonitor.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		2D91079B2FA91E1E00F379AD /* Spike AI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Spike AI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D9107A82FA91E1F00F379AD /* SpikeAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpikeAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D9107B22FA91E1F00F379AD /* SpikeAIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpikeAIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2DD733612FC3ADFF00BC2CB1 /* SpikeAILiveActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpikeAILiveActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2DD733632FC3ADFF00BC2CB1 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		2DD733652FC3ADFF00BC2CB1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		CC00010000000000000000A1 /* SpikeAIShield.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpikeAIShield.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC00020000000000000000A1 /* SpikeAIShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpikeAIShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		CC00030000000000000000A1 /* SpikeAIMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SpikeAIMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2DD7337A2FC3AE0000BC2CB1 /* Exceptions for "SpikeAILiveActivity" folder in "SpikeAILiveActivityExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2DD733602FC3ADFF00BC2CB1 /* SpikeAILiveActivityExtension */;
+		};
+		CC00010000000000000000B1 /* Exceptions for "SpikeAIShield" folder in "SpikeAIShield" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CC00010000000000000000A6 /* SpikeAIShield */;
+		};
+		CC00020000000000000000B1 /* Exceptions for "SpikeAIShieldAction" folder in "SpikeAIShieldAction" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CC00020000000000000000A6 /* SpikeAIShieldAction */;
+		};
+		CC00030000000000000000B1 /* Exceptions for "SpikeAIMonitor" folder in "SpikeAIMonitor" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CC00030000000000000000A6 /* SpikeAIMonitor */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		2D91079D2FA91E1E00F379AD /* SpikeAI */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SpikeAI;
+			sourceTree = "<group>";
+		};
+		2D9107AB2FA91E1F00F379AD /* SpikeAITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SpikeAITests;
+			sourceTree = "<group>";
+		};
+		2D9107B52FA91E1F00F379AD /* SpikeAIUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SpikeAIUITests;
+			sourceTree = "<group>";
+		};
+		2DD733672FC3ADFF00BC2CB1 /* SpikeAILiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2DD7337A2FC3AE0000BC2CB1 /* Exceptions for "SpikeAILiveActivity" folder in "SpikeAILiveActivityExtension" target */,
+			);
+			path = SpikeAILiveActivity;
+			sourceTree = "<group>";
+		};
+		CC00010000000000000000A2 /* SpikeAIShield */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CC00010000000000000000B1 /* Exceptions for "SpikeAIShield" folder in "SpikeAIShield" target */,
+			);
+			path = SpikeAIShield;
+			sourceTree = "<group>";
+		};
+		CC00020000000000000000A2 /* SpikeAIShieldAction */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CC00020000000000000000B1 /* Exceptions for "SpikeAIShieldAction" folder in "SpikeAIShieldAction" target */,
+			);
+			path = SpikeAIShieldAction;
+			sourceTree = "<group>";
+		};
+		CC00030000000000000000A2 /* SpikeAIMonitor */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CC00030000000000000000B1 /* Exceptions for "SpikeAIMonitor" folder in "SpikeAIMonitor" target */,
+			);
+			path = SpikeAIMonitor;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2D9107982FA91E1E00F379AD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2D9107CB2FA924F700F379AD /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D9107A52FA91E1F00F379AD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D9107AF2FA91E1F00F379AD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2DD7335E2FC3ADFF00BC2CB1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2DD733662FC3ADFF00BC2CB1 /* SwiftUI.framework in Frameworks */,
+				2DD733642FC3ADFF00BC2CB1 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC00010000000000000000A4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC00020000000000000000A4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC00030000000000000000A4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2D9107922FA91E1E00F379AD = {
+			isa = PBXGroup;
+			children = (
+				2D91079D2FA91E1E00F379AD /* SpikeAI */,
+				CC00010000000000000000A2 /* SpikeAIShield */,
+				CC00020000000000000000A2 /* SpikeAIShieldAction */,
+				CC00030000000000000000A2 /* SpikeAIMonitor */,
+				2D9107AB2FA91E1F00F379AD /* SpikeAITests */,
+				2D9107B52FA91E1F00F379AD /* SpikeAIUITests */,
+				2DD733672FC3ADFF00BC2CB1 /* SpikeAILiveActivity */,
+				2DD733622FC3ADFF00BC2CB1 /* Frameworks */,
+				2D91079C2FA91E1E00F379AD /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2D91079C2FA91E1E00F379AD /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2D91079B2FA91E1E00F379AD /* Spike AI.app */,
+				2D9107A82FA91E1F00F379AD /* SpikeAITests.xctest */,
+				2D9107B22FA91E1F00F379AD /* SpikeAIUITests.xctest */,
+				CC00010000000000000000A1 /* SpikeAIShield.appex */,
+				CC00020000000000000000A1 /* SpikeAIShieldAction.appex */,
+				CC00030000000000000000A1 /* SpikeAIMonitor.appex */,
+				2DD733612FC3ADFF00BC2CB1 /* SpikeAILiveActivityExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2DD733622FC3ADFF00BC2CB1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				2DD733632FC3ADFF00BC2CB1 /* WidgetKit.framework */,
+				2DD733652FC3ADFF00BC2CB1 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2D91079A2FA91E1E00F379AD /* Spike AI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D9107BC2FA91E1F00F379AD /* Build configuration list for PBXNativeTarget "Spike AI" */;
+			buildPhases = (
+				2D9107972FA91E1E00F379AD /* Sources */,
+				2D9107982FA91E1E00F379AD /* Frameworks */,
+				2D9107992FA91E1E00F379AD /* Resources */,
+				CC00040000000000000000A1 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CC00010000000000000000AB /* PBXTargetDependency */,
+				CC00020000000000000000AB /* PBXTargetDependency */,
+				CC00030000000000000000AB /* PBXTargetDependency */,
+				2DD733762FC3AE0000BC2CB1 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				2D91079D2FA91E1E00F379AD /* SpikeAI */,
+			);
+			name = "Spike AI";
+			packageProductDependencies = (
+				2D9107CA2FA924F700F379AD /* Supabase */,
+			);
+			productName = "Spike AI";
+			productReference = 2D91079B2FA91E1E00F379AD /* Spike AI.app */;
+			productType = "com.apple.product-type.application";
+		};
+		2D9107A72FA91E1F00F379AD /* SpikeAITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D9107BF2FA91E1F00F379AD /* Build configuration list for PBXNativeTarget "SpikeAITests" */;
+			buildPhases = (
+				2D9107A42FA91E1F00F379AD /* Sources */,
+				2D9107A52FA91E1F00F379AD /* Frameworks */,
+				2D9107A62FA91E1F00F379AD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2D9107AA2FA91E1F00F379AD /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				2D9107AB2FA91E1F00F379AD /* SpikeAITests */,
+			);
+			name = SpikeAITests;
+			packageProductDependencies = (
+			);
+			productName = SpikeAITests;
+			productReference = 2D9107A82FA91E1F00F379AD /* SpikeAITests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		2D9107B12FA91E1F00F379AD /* SpikeAIUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D9107C22FA91E1F00F379AD /* Build configuration list for PBXNativeTarget "SpikeAIUITests" */;
+			buildPhases = (
+				2D9107AE2FA91E1F00F379AD /* Sources */,
+				2D9107AF2FA91E1F00F379AD /* Frameworks */,
+				2D9107B02FA91E1F00F379AD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				2D9107B42FA91E1F00F379AD /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				2D9107B52FA91E1F00F379AD /* SpikeAIUITests */,
+			);
+			name = SpikeAIUITests;
+			packageProductDependencies = (
+			);
+			productName = SpikeAIUITests;
+			productReference = 2D9107B22FA91E1F00F379AD /* SpikeAIUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		2DD733602FC3ADFF00BC2CB1 /* SpikeAILiveActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2DD7337B2FC3AE0000BC2CB1 /* Build configuration list for PBXNativeTarget "SpikeAILiveActivityExtension" */;
+			buildPhases = (
+				2DD7335D2FC3ADFF00BC2CB1 /* Sources */,
+				2DD7335E2FC3ADFF00BC2CB1 /* Frameworks */,
+				2DD7335F2FC3ADFF00BC2CB1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				2DD733672FC3ADFF00BC2CB1 /* SpikeAILiveActivity */,
+			);
+			name = SpikeAILiveActivityExtension;
+			packageProductDependencies = (
+			);
+			productName = SpikeAILiveActivityExtension;
+			productReference = 2DD733612FC3ADFF00BC2CB1 /* SpikeAILiveActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		CC00010000000000000000A6 /* SpikeAIShield */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC00010000000000000000A9 /* Build configuration list for PBXNativeTarget "SpikeAIShield" */;
+			buildPhases = (
+				CC00010000000000000000A3 /* Sources */,
+				CC00010000000000000000A4 /* Frameworks */,
+				CC00010000000000000000A5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CC00010000000000000000A2 /* SpikeAIShield */,
+			);
+			name = SpikeAIShield;
+			packageProductDependencies = (
+			);
+			productName = SpikeAIShield;
+			productReference = CC00010000000000000000A1 /* SpikeAIShield.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		CC00020000000000000000A6 /* SpikeAIShieldAction */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC00020000000000000000A9 /* Build configuration list for PBXNativeTarget "SpikeAIShieldAction" */;
+			buildPhases = (
+				CC00020000000000000000A3 /* Sources */,
+				CC00020000000000000000A4 /* Frameworks */,
+				CC00020000000000000000A5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CC00020000000000000000A2 /* SpikeAIShieldAction */,
+			);
+			name = SpikeAIShieldAction;
+			packageProductDependencies = (
+			);
+			productName = SpikeAIShieldAction;
+			productReference = CC00020000000000000000A1 /* SpikeAIShieldAction.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		CC00030000000000000000A6 /* SpikeAIMonitor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC00030000000000000000A9 /* Build configuration list for PBXNativeTarget "SpikeAIMonitor" */;
+			buildPhases = (
+				CC00030000000000000000A3 /* Sources */,
+				CC00030000000000000000A4 /* Frameworks */,
+				CC00030000000000000000A5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CC00030000000000000000A2 /* SpikeAIMonitor */,
+			);
+			name = SpikeAIMonitor;
+			packageProductDependencies = (
+			);
+			productName = SpikeAIMonitor;
+			productReference = CC00030000000000000000A1 /* SpikeAIMonitor.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2D9107932FA91E1E00F379AD /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2650;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					2D91079A2FA91E1E00F379AD = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
+					2D9107A72FA91E1F00F379AD = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = 2D91079A2FA91E1E00F379AD;
+					};
+					2D9107B12FA91E1F00F379AD = {
+						CreatedOnToolsVersion = 26.4.1;
+						TestTargetID = 2D91079A2FA91E1E00F379AD;
+					};
+					2DD733602FC3ADFF00BC2CB1 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					CC00010000000000000000A6 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
+					CC00020000000000000000A6 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
+					CC00030000000000000000A6 = {
+						CreatedOnToolsVersion = 26.4.1;
+					};
+				};
+			};
+			buildConfigurationList = 2D9107962FA91E1E00F379AD /* Build configuration list for PBXProject "Spike AI" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 2D9107922FA91E1E00F379AD;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				2D9107C92FA924F700F379AD /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 2D91079C2FA91E1E00F379AD /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				2D91079A2FA91E1E00F379AD /* Spike AI */,
+				2D9107A72FA91E1F00F379AD /* SpikeAITests */,
+				2D9107B12FA91E1F00F379AD /* SpikeAIUITests */,
+				CC00010000000000000000A6 /* SpikeAIShield */,
+				CC00020000000000000000A6 /* SpikeAIShieldAction */,
+				CC00030000000000000000A6 /* SpikeAIMonitor */,
+				2DD733602FC3ADFF00BC2CB1 /* SpikeAILiveActivityExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2D9107992FA91E1E00F379AD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D9107A62FA91E1F00F379AD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D9107B02FA91E1F00F379AD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2DD7335F2FC3ADFF00BC2CB1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC00010000000000000000A5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC00020000000000000000A5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC00030000000000000000A5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2D9107972FA91E1E00F379AD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D9107A42FA91E1F00F379AD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2D9107AE2FA91E1F00F379AD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		2DD7335D2FC3ADFF00BC2CB1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC00010000000000000000A3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC00020000000000000000A3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CC00030000000000000000A3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		2D9107AA2FA91E1F00F379AD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2D91079A2FA91E1E00F379AD /* Spike AI */;
+			targetProxy = 2D9107A92FA91E1F00F379AD /* PBXContainerItemProxy */;
+		};
+		2D9107B42FA91E1F00F379AD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2D91079A2FA91E1E00F379AD /* Spike AI */;
+			targetProxy = 2D9107B32FA91E1F00F379AD /* PBXContainerItemProxy */;
+		};
+		2DD733762FC3AE0000BC2CB1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2DD733602FC3ADFF00BC2CB1 /* SpikeAILiveActivityExtension */;
+			targetProxy = 2DD733752FC3AE0000BC2CB1 /* PBXContainerItemProxy */;
+		};
+		CC00010000000000000000AB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CC00010000000000000000A6 /* SpikeAIShield */;
+			targetProxy = CC00010000000000000000AA /* PBXContainerItemProxy */;
+		};
+		CC00020000000000000000AB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CC00020000000000000000A6 /* SpikeAIShieldAction */;
+			targetProxy = CC00020000000000000000AA /* PBXContainerItemProxy */;
+		};
+		CC00030000000000000000AB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CC00030000000000000000A6 /* SpikeAIMonitor */;
+			targetProxy = CC00030000000000000000AA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2D9107BA2FA91E1F00F379AD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		2D9107BB2FA91E1F00F379AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		2D9107BD2FA91E1F00F379AD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SpikeAI/SpikeAI.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai;
+				PRODUCT_MODULE_NAME = SpikeAI;
+				PRODUCT_NAME = "Spike AI";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2D9107BE2FA91E1F00F379AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = SpikeAI/SpikeAI.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai;
+				PRODUCT_MODULE_NAME = SpikeAI;
+				PRODUCT_NAME = "Spike AI";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		2D9107C02FA91E1F00F379AD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "Mirzo-Ulugbek-Fazilov.SpikeAITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Spike AI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Spike AI";
+			};
+			name = Debug;
+		};
+		2D9107C12FA91E1F00F379AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "Mirzo-Ulugbek-Fazilov.SpikeAITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Spike AI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Spike AI";
+			};
+			name = Release;
+		};
+		2D9107C32FA91E1F00F379AD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "Mirzo-Ulugbek-Fazilov.SpikeAIUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Spike AI";
+			};
+			name = Debug;
+		};
+		2D9107C42FA91E1F00F379AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "Mirzo-Ulugbek-Fazilov.SpikeAIUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Spike AI";
+			};
+			name = Release;
+		};
+		2DD733782FC3AE0000BC2CB1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpikeAILiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SpikeAILiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai.liveactivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2DD733792FC3AE0000BC2CB1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpikeAILiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SpikeAILiveActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai.liveactivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CC00010000000000000000A7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpikeAIShield/SpikeAIShield.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpikeAIShield/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Spike AI Shield";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai.shield;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CC00010000000000000000A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpikeAIShield/SpikeAIShield.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpikeAIShield/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Spike AI Shield";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai.shield;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CC00020000000000000000A7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpikeAIShieldAction/SpikeAIShieldAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpikeAIShieldAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Spike AI Shield Action";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai.shieldaction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CC00020000000000000000A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpikeAIShieldAction/SpikeAIShieldAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpikeAIShieldAction/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Spike AI Shield Action";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai.shieldaction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CC00030000000000000000A7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpikeAIMonitor/SpikeAIMonitor.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpikeAIMonitor/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Spike AI Monitor";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai.monitor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CC00030000000000000000A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SpikeAIMonitor/SpikeAIMonitor.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 529ZRTH73C;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SpikeAIMonitor/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Spike AI Monitor";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.spikeai.spikeai.monitor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2D9107962FA91E1E00F379AD /* Build configuration list for PBXProject "Spike AI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D9107BA2FA91E1F00F379AD /* Debug */,
+				2D9107BB2FA91E1F00F379AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2D9107BC2FA91E1F00F379AD /* Build configuration list for PBXNativeTarget "Spike AI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D9107BD2FA91E1F00F379AD /* Debug */,
+				2D9107BE2FA91E1F00F379AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2D9107BF2FA91E1F00F379AD /* Build configuration list for PBXNativeTarget "SpikeAITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D9107C02FA91E1F00F379AD /* Debug */,
+				2D9107C12FA91E1F00F379AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2D9107C22FA91E1F00F379AD /* Build configuration list for PBXNativeTarget "SpikeAIUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2D9107C32FA91E1F00F379AD /* Debug */,
+				2D9107C42FA91E1F00F379AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2DD7337B2FC3AE0000BC2CB1 /* Build configuration list for PBXNativeTarget "SpikeAILiveActivityExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2DD733782FC3AE0000BC2CB1 /* Debug */,
+				2DD733792FC3AE0000BC2CB1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC00010000000000000000A9 /* Build configuration list for PBXNativeTarget "SpikeAIShield" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC00010000000000000000A7 /* Debug */,
+				CC00010000000000000000A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC00020000000000000000A9 /* Build configuration list for PBXNativeTarget "SpikeAIShieldAction" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC00020000000000000000A7 /* Debug */,
+				CC00020000000000000000A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC00030000000000000000A9 /* Build configuration list for PBXNativeTarget "SpikeAIMonitor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC00030000000000000000A7 /* Debug */,
+				CC00030000000000000000A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2D9107C92FA924F700F379AD /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2D9107CA2FA924F700F379AD /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2D9107C92FA924F700F379AD /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 2D9107932FA91E1E00F379AD /* Project object */;
+}

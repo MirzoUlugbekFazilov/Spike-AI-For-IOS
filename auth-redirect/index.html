@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spike AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a; color: #fff;
+            min-height: 100vh; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .container { text-align: center; padding: 40px 24px; max-width: 400px; width: 100%; }
+        .logo {
+            width: 64px; height: 64px; background: #6366f1; border-radius: 16px;
+            display: inline-flex; align-items: center; justify-content: center; margin-bottom: 24px;
+        }
+        .logo span { color: white; font-size: 32px; font-weight: bold; }
+        h1 { font-size: 24px; font-weight: 700; margin-bottom: 12px; }
+        p { color: #9ca3af; font-size: 15px; line-height: 1.5; margin-bottom: 24px; }
+        .btn {
+            display: block; width: 100%; background: #6366f1; color: white;
+            font-weight: 600; font-size: 17px; padding: 16px 24px; border-radius: 14px;
+            text-decoration: none; text-align: center; -webkit-tap-highlight-color: rgba(99,102,241,0.3);
+        }
+        .spinner {
+            width: 32px; height: 32px; border: 3px solid #333; border-top-color: #6366f1;
+            border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hidden { display: none; }
+        .subtext { color: #6b7280; font-size: 13px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo"><span>S</span></div>
+        <div id="loading">
+            <div class="spinner"></div>
+            <h1>Opening Spike AI...</h1>
+            <p>You're being redirected to the app.</p>
+        </div>
+        <div id="fallback" class="hidden">
+            <h1>Email Confirmed!</h1>
+            <p>Tap the button to open the app and sign in.</p>
+            <a id="openBtn" class="btn" href="#">Open Spike AI</a>
+            <p class="subtext">If nothing happens, make sure the app is installed.</p>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // PKCE flow uses ?code=xxx in query params
+            // Legacy flow uses #access_token=xxx in hash
+            var search = window.location.search;
+            var hash = window.location.hash;
+            var deepLink = '';
+
+            if (search && search.length > 1) {
+                // PKCE: pass query params directly
+                deepLink = 'linear://login-callback' + search;
+            } else if (hash && hash.length > 1) {
+                // Legacy: convert hash to query
+                deepLink = 'linear://login-callback?' + hash.substring(1);
+            }
+
+            if (!deepLink) {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('fallback').classList.remove('hidden');
+                return;
+            }
+
+            // Set fallback button
+            document.getElementById('openBtn').href = deepLink;
+
+            // Try opening the app immediately
+            window.location.href = deepLink;
+
+            // Show fallback button after 1.5s
+            setTimeout(function() {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('fallback').classList.remove('hidden');
+            }, 1500);
+        })();
+    </script>
+</body>
+</html>
