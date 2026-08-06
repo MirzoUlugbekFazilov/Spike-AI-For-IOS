@@ -19,8 +19,10 @@ struct SpokenGoalParserTests {
             "Tomorrow I want to have breakfast at 5:52 am and then hit the gym"
         )
 
-        let breakfast = try? #require(goals.first)
-        #expect(breakfast?.title == "Breakfast")
+        let breakfast = goals.first
+        // "Have breakfast" is a verb plus an object — what matters is that the
+        // clock time moved to the reminder instead of sitting in the title.
+        #expect(breakfast?.title == "Have breakfast")
         #expect(breakfast?.time?.hour == 5)
         #expect(breakfast?.time?.minute == 52)
         #expect(breakfast?.dayOffset == 1)
@@ -30,19 +32,44 @@ struct SpokenGoalParserTests {
     @Test func titlesAreCleanedAcrossTheSpokenFormsOfATime() {
         let cases: [(spoken: String, title: String)] = [
             ("Breakfast at 5:52 AM", "Breakfast"),
-            ("Have breakfast at 5.52 am tomorrow", "Breakfast"),
+            ("Have breakfast at 5.52 am tomorrow", "Have breakfast"),
             ("Go to gym at 6pm", "Go to gym"),
             ("Call mum at 7 o'clock", "Call mum"),
             ("Lunch at noon", "Lunch"),
             ("Meeting at half past eight", "Meeting"),
+            ("Dinner at quarter to nine", "Dinner"),
             ("Visit grandma at 6 tomorrow", "Visit grandma"),
             ("Study in the evening", "Study"),
             ("Hit the gym 6 pm", "Hit the gym"),
+            ("Gym at six in the evening", "Gym"),
         ]
 
         for (spoken, expected) in cases {
             let title = SpokenGoalParser.cleanTitle(spoken)
             #expect(title == expected, "\"\(spoken)\" produced \"\(title)\"")
+        }
+    }
+
+    /// Every time removed from a title must reappear on the reminder. Stripping
+    /// a form the extractor cannot read would delete the user's intent.
+    @Test func everyStrippedTimeIsRecovered() {
+        let cases: [(spoken: String, hour: Int, minute: Int)] = [
+            ("Breakfast at 5:52 AM", 5, 52),
+            ("Go to gym at 6pm", 18, 0),
+            ("Call mum at 7 o'clock", 7, 0),
+            ("Lunch at noon", 12, 0),
+            ("Sleep at midnight", 0, 0),
+            ("Meeting at half past eight", 8, 30),
+            ("Dinner at quarter to nine", 8, 45),
+            ("Standup at quarter past ten", 10, 15),
+            ("Visit grandma at 6 tomorrow", 6, 0),
+            ("Gym at six in the evening", 18, 0),
+        ]
+
+        for (spoken, hour, minute) in cases {
+            let time = SpokenGoalParser.time(in: spoken)
+            #expect(time?.hour == hour && time?.minute == minute,
+                    "\"\(spoken)\" read as \(String(describing: time))")
         }
     }
 

@@ -143,27 +143,45 @@ const DAYPART = String.raw`(?:in\s+the\s+(?:morning|afternoon|evening)|at\s+nigh
 const DAY_WORDS =
   String.raw`(?:the\s+day\s+after\s+tomorrow|day\s+after\s+tomorrow|today|tomorrow|tonight|next\s+week|this\s+(?:morning|afternoon|evening)|monday|tuesday|wednesday|thursday|friday|saturday|sunday)`;
 
-/** A minute part or a meridiem marks a number as a clock reading beyond doubt. */
-const UNAMBIGUOUS_CLOCK =
-  String.raw`\d{1,2}(?:[:.]\d{2}(?:\s*(?:a\.?m\.?|p\.?m\.?))?|\s*(?:a\.?m\.?|p\.?m\.?)|\s*o'?\s?clock)`;
+const MERIDIEM = String.raw`(?:a\.?m\.?|p\.?m\.?)`;
+
+/** An hour, spoken as a figure or as a word. */
+const HOUR_TOKEN =
+  String.raw`(?:\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)`;
+
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6,
+  seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+};
 
 /**
- * A bare hour is only a time when nothing but scheduling words follow it —
- * "gym at 6", "breakfast at 6 tomorrow". Without this guard "Look at 3 options"
- * would lose its object.
+ * Minutes, a meridiem or "o'clock" marks a reading as a clock time beyond
+ * doubt, so it needs no preposition to be recognised.
  */
-const BARE_HOUR_WITH_PREPOSITION =
-  String.raw`\b${TIME_PREPOSITION}\s+\d{1,2}(?=\s*(?:$|[,.;])|\s+(?:${DAYPART}|${DAY_WORDS})\b)`;
-
 const SELF_EVIDENT_TIME = [
-  String.raw`\b${UNAMBIGUOUS_CLOCK}`,
-  String.raw`\b(?:half|quarter)\s+(?:past|to)\s+\d{1,2}`,
+  String.raw`\b\d{1,2}[:.]\d{2}(?:\s*${MERIDIEM})?`,
+  String.raw`\b${HOUR_TOKEN}\s*${MERIDIEM}`,
+  String.raw`\b${HOUR_TOKEN}\s*o'?\s?clock`,
+  String.raw`\b(?:half|quarter)\s+(?:past|to)\s+${HOUR_TOKEN}`,
   String.raw`\b(?:noon|midday|midnight)\b`,
 ].join("|");
 
+/**
+ * A bare hour is only a time when nothing but scheduling words follow it —
+ * "gym at 6", "breakfast at six tomorrow". Without this guard "Look at 3
+ * options" would lose its object.
+ */
+const BARE_HOUR_WITH_PREPOSITION =
+  String.raw`\b${TIME_PREPOSITION}\s+${HOUR_TOKEN}(?=\s*(?:$|[,.;])|\s+(?:${DAYPART}|${DAY_WORDS})\b)`;
+
+/**
+ * Every form `extractSpokenTime` can read, and no more: stripping a time the
+ * extractor cannot capture would delete the user's intent instead of moving it
+ * to the reminder.
+ */
 const TIME_PHRASE = new RegExp(
   "(?:" +
-    `(?:\\b${TIME_PREPOSITION}\\s+${UNAMBIGUOUS_CLOCK}|${BARE_HOUR_WITH_PREPOSITION}|${SELF_EVIDENT_TIME})` +
+    `(?:\\b${TIME_PREPOSITION}\\s+(?:${SELF_EVIDENT_TIME})|${BARE_HOUR_WITH_PREPOSITION}|${SELF_EVIDENT_TIME})` +
     `(?:\\s+${DAYPART})?` +
     `|${DAYPART}` +
   ")",
@@ -956,30 +974,105 @@ function extractSpokenPriority(segment: string): "low" | "medium" | "high" {
   return "medium";
 }
 
-/** "at 3pm", "at 15:30", "at half past 8" -> "HH:mm". */
+/**
+ * Reads a wall-clock time out of free text: "at 3pm", "15:30", "half past 8",
+ * "quarter to nine", "noon".
+ *
+ * Understands exactly the forms TIME_PHRASE strips out of titles — the two must
+ * stay in step, or a title would lose a time that never reached the reminder.
+ * Ordered most specific first so "5:52 am" is not misread as "52 am".
+ */
 function extractSpokenTime(segment: string): string | null {
-  const clock = segment.match(/\b(\d{1,2})[:.](\d{2})\s*(am|pm)?\b/i);
-  if (clock) {
-    let hour = Number(clock[1]);
-    const minute = Number(clock[2]);
-    const suffix = clock[3]?.toLowerCase();
-    if (suffix === "pm" && hour < 12) hour += 12;
-    if (suffix === "am" && hour === 12) hour = 0;
-    if (hour <= 23 && minute <= 59) {
-      return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  const reading = readClock(segment);
+  if (!reading) return null;
+  const [hour, minute] = applyDaypart(reading, segment);
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function readClock(segment: string): [number, number] | null {
+  if (/\b(?:noon|midday)\b/i.test(segment)) return [12, 0];
+  if (/\bmidnight\b/i.test(segment)) return [0, 0];
+
+  // "half past eight", "quarter to nine"
+  const fraction = segment.match(
+    new RegExp(String.raw`\b(half|quarter)\s+(past|to)\s+(${HOUR_TOKEN})\b`, "i"),
+  );
+  if (fraction) {
+    const base = hourValue(fraction[3]);
+    if (base !== null) {
+      const minute = fraction[1].toLowerCase() === "half" ? 30 : 15;
+      return fraction[2].toLowerCase() === "to"
+        ? normalizeClock((base + 23) % 24, 60 - minute)   // the hour before, wrapping at midnight
+        : normalizeClock(base, minute);
     }
   }
 
-  const oclock = segment.match(/\b(\d{1,2})\s*(am|pm)\b/i);
+  // "5:52 am", "17.30"
+  const clock = segment.match(new RegExp(String.raw`\b(\d{1,2})[:.](\d{2})\s*(${MERIDIEM})?`, "i"));
+  if (clock) {
+    const found = normalizeClock(Number(clock[1]), Number(clock[2]), clock[3]);
+    if (found) return found;
+  }
+
+  // "6pm", "eight am"
+  const withMeridiem = segment.match(
+    new RegExp(String.raw`\b(${HOUR_TOKEN})\s*(${MERIDIEM})`, "i"),
+  );
+  if (withMeridiem) {
+    const hour = hourValue(withMeridiem[1]);
+    if (hour !== null) {
+      const found = normalizeClock(hour, 0, withMeridiem[2]);
+      if (found) return found;
+    }
+  }
+
+  // "7 o'clock"
+  const oclock = segment.match(new RegExp(String.raw`\b(${HOUR_TOKEN})\s*o'?\s?clock`, "i"));
   if (oclock) {
-    let hour = Number(oclock[1]);
-    const suffix = oclock[2].toLowerCase();
-    if (suffix === "pm" && hour < 12) hour += 12;
-    if (suffix === "am" && hour === 12) hour = 0;
-    if (hour <= 23) return `${String(hour).padStart(2, "0")}:00`;
+    const hour = hourValue(oclock[1]);
+    if (hour !== null) return normalizeClock(hour, 0);
+  }
+
+  // "at 6", "by six" — only where a preposition and what follows make it
+  // unambiguous, matching the strip rule exactly.
+  const bare = segment.match(new RegExp(BARE_HOUR_WITH_PREPOSITION.replace(
+    HOUR_TOKEN,
+    `(${HOUR_TOKEN})`,
+  ), "i"));
+  if (bare) {
+    const hour = hourValue(bare[1]);
+    if (hour !== null) return normalizeClock(hour, 0);
   }
 
   return null;
+}
+
+function hourValue(token: string): number | null {
+  const figure = Number(token);
+  if (Number.isInteger(figure)) return figure;
+  const word = NUMBER_WORDS[token.toLowerCase()];
+  return word === undefined ? null : word;
+}
+
+function normalizeClock(hour: number, minute: number, meridiem?: string): [number, number] | null {
+  const suffix = (meridiem ?? "").toLowerCase().replace(/\./g, "");
+  if (suffix.startsWith("p") && hour < 12) hour += 12;
+  if (suffix.startsWith("a") && hour === 12) hour = 0;
+  if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+  return [hour, minute];
+}
+
+/**
+ * "six in the evening" is 18:00, not 06:00. Only nudges a morning hour that
+ * carried no explicit am/pm.
+ */
+function applyDaypart([hour, minute]: [number, number], segment: string): [number, number] {
+  if (hour < 1 || hour > 11) return [hour, minute];
+  if (new RegExp(String.raw`\b${MERIDIEM}`, "i").test(segment)) return [hour, minute];
+  if (!/\b(?:in\s+the\s+(?:afternoon|evening)|at\s+night|tonight)\b/i.test(segment)) {
+    return [hour, minute];
+  }
+  return [hour + 12, minute];
 }
 
 // ── Helpers (shared conventions with generate-progress-summary) ──────────────

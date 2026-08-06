@@ -105,28 +105,43 @@ enum SpokenGoalParser {
     private static let dayWords =
         #"(?:the\s+day\s+after\s+tomorrow|day\s+after\s+tomorrow|today|tomorrow|tonight|next\s+week|this\s+(?:morning|afternoon|evening)|monday|tuesday|wednesday|thursday|friday|saturday|sunday)"#
 
-    /// A minute part or a meridiem marks a number as a clock reading beyond doubt.
-    private static let unambiguousClock =
-        #"\d{1,2}(?:[:.]\d{2}(?:\s*(?:a\.?m\.?|p\.?m\.?))?|\s*(?:a\.?m\.?|p\.?m\.?)|\s*o'?\s?clock)"#
+    private static let meridiem = #"(?:a\.?m\.?|p\.?m\.?)"#
 
-    /// A bare hour is only a time when nothing but scheduling words follow it —
-    /// "gym at 6", "breakfast at 6 tomorrow". Without this guard "Look at 3
-    /// options" would lose its object.
-    private static var bareHourWithPreposition: String {
-        #"\b"# + timePreposition + #"\s+\d{1,2}(?=\s*(?:$|[,.;])|\s+(?:"# + daypart + "|" + dayWords + #")\b)"#
-    }
+    /// An hour, spoken as a figure or as a word.
+    private static let hourToken =
+        #"(?:\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"#
 
+    private static let numberWords: [String: Int] = [
+        "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6,
+        "seven": 7, "eight": 8, "nine": 9, "ten": 10, "eleven": 11, "twelve": 12,
+    ]
+
+    /// Minutes, a meridiem or "o'clock" marks a reading as a clock time beyond
+    /// doubt, so it needs no preposition to be recognised.
     private static var selfEvidentTime: String {
         [
-            #"\b"# + unambiguousClock,
-            #"\b(?:half|quarter)\s+(?:past|to)\s+\d{1,2}"#,
+            #"\b\d{1,2}[:.]\d{2}(?:\s*"# + meridiem + ")?",
+            #"\b"# + hourToken + #"\s*"# + meridiem,
+            #"\b"# + hourToken + #"\s*o'?\s?clock"#,
+            #"\b(?:half|quarter)\s+(?:past|to)\s+"# + hourToken,
             #"\b(?:noon|midday|midnight)\b"#,
         ].joined(separator: "|")
     }
 
+    /// A bare hour is only a time when nothing but scheduling words follow it —
+    /// "gym at 6", "breakfast at six tomorrow". Without this guard "Look at 3
+    /// options" would lose its object.
+    private static var bareHourWithPreposition: String {
+        #"\b"# + timePreposition + #"\s+"# + hourToken
+            + #"(?=\s*(?:$|[,.;])|\s+(?:"# + daypart + "|" + dayWords + #")\b)"#
+    }
+
+    /// Every form `extractTime` can read, and no more: stripping a time the
+    /// extractor cannot capture would delete the user's intent instead of
+    /// moving it to the reminder.
     private static var timePhrase: String {
         "(?:(?:"
-            + #"\b"# + timePreposition + #"\s+"# + unambiguousClock
+            + #"\b"# + timePreposition + #"\s+(?:"# + selfEvidentTime + ")"
             + "|" + bareHourWithPreposition
             + "|" + selfEvidentTime
             + #")(?:\s+"# + daypart + ")?"
@@ -342,25 +357,87 @@ enum SpokenGoalParser {
         return .medium
     }
 
+    /// Reads a wall-clock time out of free text.
+    ///
+    /// Understands exactly the forms `timePhrase` strips out of titles — the two
+    /// must stay in step, or a title would lose a time that never reached the
+    /// reminder. Ordered most specific first so "5:52 am" is not misread as
+    /// "52 am".
     private static func extractTime(_ segment: String) -> (hour: Int, minute: Int)? {
-        if let groups = capture(#"\b(\d{1,2})[:.](\d{2})\s*(am|pm)?\b"#, segment) {
-            var hour = Int(groups[1]) ?? -1
-            let minute = Int(groups[2]) ?? -1
-            let suffix = groups[3].lowercased()
-            if suffix == "pm", hour < 12 { hour += 12 }
-            if suffix == "am", hour == 12 { hour = 0 }
-            if (0...23).contains(hour), (0...59).contains(minute) { return (hour, minute) }
+        guard let reading = readClock(segment) else { return nil }
+        return applyDaypart(reading, in: segment)
+    }
+
+    private static func readClock(_ segment: String) -> (hour: Int, minute: Int)? {
+        if matches(#"\b(?:noon|midday)\b"#, segment) { return (12, 0) }
+        if matches(#"\bmidnight\b"#, segment) { return (0, 0) }
+
+        // "half past eight", "quarter to nine"
+        if let groups = capture(#"\b(half|quarter)\s+(past|to)\s+"# + "(" + hourToken + #")\b"#, segment),
+           let base = hourValue(groups[3]) {
+            let minute = groups[1].lowercased() == "half" ? 30 : 15
+            if groups[2].lowercased() == "to" {
+                let hour = (base + 23) % 24        // the hour before, wrapping at midnight
+                return normalize(hour: hour, minute: 60 - minute, segment: segment)
+            }
+            return normalize(hour: base, minute: minute, segment: segment)
         }
 
-        if let groups = capture(#"\b(\d{1,2})\s*(am|pm)\b"#, segment) {
-            var hour = Int(groups[1]) ?? -1
-            let suffix = groups[2].lowercased()
-            if suffix == "pm", hour < 12 { hour += 12 }
-            if suffix == "am", hour == 12 { hour = 0 }
-            if (0...23).contains(hour) { return (hour, 0) }
+        // "5:52 am", "17.30"
+        if let groups = capture(#"\b(\d{1,2})[:.](\d{2})\s*("# + meridiem + #")?"#, segment),
+           let hour = Int(groups[1]), let minute = Int(groups[2]) {
+            return normalize(hour: hour, minute: minute, meridiem: groups[3], segment: segment)
+        }
+
+        // "6pm", "eight am"
+        if let groups = capture("\\b(" + hourToken + #")\s*("# + meridiem + ")", segment),
+           let hour = hourValue(groups[1]) {
+            return normalize(hour: hour, minute: 0, meridiem: groups[2], segment: segment)
+        }
+
+        // "7 o'clock"
+        if let groups = capture("\\b(" + hourToken + #")\s*o'?\s?clock"#, segment),
+           let hour = hourValue(groups[1]) {
+            return normalize(hour: hour, minute: 0, segment: segment)
+        }
+
+        // "at 6", "by six" — only where a preposition and what follows make it
+        // unambiguous, matching the strip rule exactly.
+        if let groups = capture("\\b" + timePreposition + "\\s+(" + hourToken + ")"
+            + #"(?=\s*(?:$|[,.;])|\s+(?:"# + daypart + "|" + dayWords + #")\b)"#, segment),
+           let hour = hourValue(groups[1]) {
+            return normalize(hour: hour, minute: 0, segment: segment)
         }
 
         return nil
+    }
+
+    private static func hourValue(_ token: String) -> Int? {
+        if let figure = Int(token) { return figure }
+        return numberWords[token.lowercased()]
+    }
+
+    private static func normalize(
+        hour: Int, minute: Int, meridiem: String = "", segment: String
+    ) -> (hour: Int, minute: Int)? {
+        var hour = hour
+        let suffix = meridiem.lowercased().replacingOccurrences(of: ".", with: "")
+        if suffix.hasPrefix("p"), hour < 12 { hour += 12 }
+        if suffix.hasPrefix("a"), hour == 12 { hour = 0 }
+        guard (0...23).contains(hour), (0...59).contains(minute) else { return nil }
+        return (hour, minute)
+    }
+
+    /// "six in the evening" is 18:00, not 06:00. Only nudges a morning hour that
+    /// carried no explicit am/pm.
+    private static func applyDaypart(
+        _ reading: (hour: Int, minute: Int), in segment: String
+    ) -> (hour: Int, minute: Int) {
+        guard reading.hour >= 1, reading.hour <= 11,
+              !matches(#"\b"# + meridiem, segment),
+              matches(#"\b(?:in\s+the\s+(?:afternoon|evening)|at\s+night|tonight)\b"#, segment)
+        else { return reading }
+        return (reading.hour + 12, reading.minute)
     }
 
     // ── Title shaping ────────────────────────────────────────────────────
