@@ -132,70 +132,118 @@ final class NotificationManager {
 
     // MARK: Daily Quote of the Day (5 AM)
 
-    /// Reference to the shared quote tracking store (Supabase-backed).
-    var quoteTrackingStore: QuoteTrackingStore?
+    /// Identifier prefix for the daily quote notifications. The quote-day key
+    /// is appended, which is what makes rescheduling idempotent.
+    static let quoteIdentifierPrefix = "spike-daily-quote-"
 
-    /// Schedules the next 3 days of quote notifications at 5 AM.
-    /// Quotes are tracked via Supabase so they persist across reinstalls.
+    /// `userInfo` keys carried by a quote notification so a tap can open the
+    /// sheet on exactly the quote that was delivered.
+    static let quoteDayInfoKey = "spike_quote_day"
+    static let quoteIndexInfoKey = "spike_quote_index"
+
+    /// Days of quote notifications kept queued. Enough that someone who doesn't
+    /// open the app for a week keeps receiving them, while staying well inside
+    /// the 64-pending-notification budget shared with reminders and goals.
+    private static let quoteScheduleHorizon = 7
+
+    /// Queues the upcoming 5 AM quote notifications.
+    ///
+    /// The body is rendered from `QuoteTrackingStore.quoteIndex` — the very same
+    /// pure function of (user, quote day) the app uses to pick the quote it
+    /// displays. Both sides therefore resolve to the same quote with no shared
+    /// state to drift, no network round trip, and no dependence on *when* the
+    /// notification happened to be scheduled.
+    ///
+    /// Safe to call as often as you like: each day is written under a stable
+    /// identifier, so re-adding replaces the pending request rather than
+    /// duplicating it. That is also the upgrade path — it overwrites bodies left
+    /// behind by the old random picker, and refreshes them after a language
+    /// change or a switch of signed-in user.
     func scheduleDailyQuotes(userId: UUID? = nil) {
         Task {
             let calendar = Calendar.current
-            let today = calendar.startOfDay(for: Date())
-            let pending = await center.pendingNotificationRequests()
+            let now = Date()
+            let language = UserDefaults.standard.string(forKey: "spike_app_language") ?? "en"
+            var scheduled: Set<String> = []
 
-            for dayOffset in 0..<3 {
-                guard let targetDate = calendar.date(byAdding: .day, value: dayOffset + 1, to: today) else { continue }
-                let dateKey = dateString(targetDate)
-                let notifID = "spike-daily-quote-\(dateKey)"
+            // Starts at today: opened in the small hours, this morning's 5 AM is
+            // still ahead. Days already past their boundary are skipped.
+            for dayOffset in 0..<Self.quoteScheduleHorizon {
+                guard let day = calendar.date(byAdding: .day, value: dayOffset, to: now),
+                      let fireDate = calendar.date(
+                          bySettingHour: QuoteTrackingStore.quoteHour, minute: 0, second: 0, of: day
+                      ),
+                      fireDate > now
+                else { continue }
 
-                // Skip if already scheduled for this date
-                if pending.contains(where: { $0.identifier == notifID }) { continue }
+                let dayKey = QuoteTrackingStore.dayKey(for: fireDate, calendar: calendar)
+                let identifier = Self.quoteIdentifierPrefix + dayKey
+                scheduled.insert(identifier)
 
-                let quote: DailyQuote
-                let quoteIdx: Int
-                if let uid = userId, let store = quoteTrackingStore {
-                    quoteIdx = store.pickNotificationQuote(userId: uid)
-                    quote = QuotesData.all[max(0, min(quoteIdx, QuotesData.all.count - 1))]
-                } else {
-                    quoteIdx = Int.random(in: 0..<QuotesData.all.count)
-                    quote = QuotesData.all[quoteIdx]
-                }
-
-                // Use bundled or cached translation
-                var displayText = quote.text
-                let lang = UserDefaults.standard.string(forKey: "spike_app_language") ?? "en"
-                if lang != "en" {
-                    if let langArray = QuotesTranslations.all[lang],
-                       quoteIdx < langArray.count,
-                       !langArray[quoteIdx].isEmpty {
-                        displayText = langArray[quoteIdx]
-                    } else if let cached = UserDefaults.standard.string(forKey: "spike_quote_trans_\(lang)_\(quoteIdx)"),
-                              !cached.isEmpty {
-                        displayText = cached
-                    }
-                }
+                let quoteIndex = QuoteTrackingStore.quoteIndex(userId: userId, dayKey: dayKey)
+                let quote = QuoteTrackingStore.quote(userId: userId, dayKey: dayKey)
 
                 let content = UNMutableNotificationContent()
                 content.title = AppLocalization.string("quote_of_day")
-                content.body = "\"\(displayText)\"\n— \(quote.author)"
+                content.body = "\"\(Self.quoteBody(index: quoteIndex, quote: quote, language: language))\"\n— \(quote.author)"
                 content.sound = .default
+                content.userInfo = [
+                    Self.quoteDayInfoKey: dayKey,
+                    Self.quoteIndexInfoKey: quoteIndex,
+                ]
 
-                var dc = calendar.dateComponents([.year, .month, .day], from: targetDate)
-                dc.hour = 5
+                var dc = calendar.dateComponents([.year, .month, .day], from: fireDate)
+                dc.hour = QuoteTrackingStore.quoteHour
                 dc.minute = 0
 
                 let trigger = UNCalendarNotificationTrigger(dateMatching: dc, repeats: false)
-                let req = UNNotificationRequest(identifier: notifID, content: content, trigger: trigger)
-                try? await center.add(req)
+                let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                try? await center.add(request)
+            }
+
+            // Discard quote notifications outside the window. Without this, a
+            // request queued by an older build for a date we no longer write
+            // would still fire with a quote the app will never show.
+            let stale = await center.pendingNotificationRequests()
+                .map(\.identifier)
+                .filter { $0.hasPrefix(Self.quoteIdentifierPrefix) && !scheduled.contains($0) }
+            if !stale.isEmpty {
+                center.removePendingNotificationRequests(withIdentifiers: stale)
             }
         }
     }
 
-    private func dateString(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.locale = Locale(identifier: "en_US_POSIX")
-        return f.string(from: date)
+    /// Drops every pending quote notification — used on sign-out, where the
+    /// per-user quote sequence no longer applies to whoever holds the device.
+    func cancelDailyQuotes() {
+        center.getPendingNotificationRequests { requests in
+            let ids = requests
+                .map(\.identifier)
+                .filter { $0.hasPrefix(NotificationManager.quoteIdentifierPrefix) }
+            guard !ids.isEmpty else { return }
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ids)
+        }
+    }
+
+    /// The quote text in the user's language: bundled translation first, then
+    /// anything the app cached from the translate-quote function, then the
+    /// English original. Mirrors `QuoteTrackingStore.loadTranslation` so the
+    /// banner and the sheet resolve to the same string.
+    private static func quoteBody(index: Int, quote: DailyQuote, language: String) -> String {
+        guard language != "en" else { return quote.text }
+
+        if let bundled = QuotesTranslations.all[language],
+           index < bundled.count,
+           !bundled[index].isEmpty {
+            return bundled[index]
+        }
+
+        if let cached = UserDefaults.standard.string(forKey: "spike_quote_trans_\(language)_\(index)"),
+           !cached.isEmpty {
+            return cached
+        }
+
+        return quote.text
     }
 
     // MARK: No-Goals Midday Reminder

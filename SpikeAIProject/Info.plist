@@ -2,17 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSCameraUsageDescription</key>
-	<string>Spike AI uses the camera to verify Sweat Mode movement unlocks.</string>
-	<key>NSSupportsLiveActivities</key>
-	<true/>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>googlegmail</string>
-		<string>ms-outlook</string>
-	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -25,5 +14,22 @@
 			</array>
 		</dict>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>googlegmail</string>
+		<string>ms-outlook</string>
+	</array>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>Spike AI schedules alarms so your goal reminders ring on the Lock Screen until you stop them.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Spike AI uses the camera to verify Sweat Mode movement unlocks.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Spike AI uses the microphone so you can speak your daily goals instead of typing them.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Spike AI converts the goals you speak into text so it can add them to your list with the right time and priority.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 </dict>
 </plist>

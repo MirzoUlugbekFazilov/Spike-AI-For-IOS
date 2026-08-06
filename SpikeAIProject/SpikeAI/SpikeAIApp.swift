@@ -13,6 +13,36 @@ import UserNotifications
 
 // MARK: - Notification Delegate
 
+extension Notification.Name {
+    /// Posted when a Quote of the Day notification is tapped. The object is the
+    /// quote-day key ("yyyy-MM-dd") that notification was written for.
+    static let spikeOpenQuoteOfTheDay = Notification.Name("spikeOpenQuoteOfTheDay")
+}
+
+/// Holds a tapped quote notification until the UI is ready for it.
+///
+/// On a cold launch the delegate fires before SwiftUI has installed its
+/// observers, and `NotificationCenter` posts aren't buffered — so the day key is
+/// parked here and consumed exactly once by whichever side gets there first.
+enum QuoteDeepLink {
+    private static let lock = NSLock()
+    private static var pendingDayKey: String?
+
+    static func set(_ dayKey: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        pendingDayKey = dayKey
+    }
+
+    static func consume() -> String? {
+        lock.lock()
+        defer { lock.unlock() }
+        let dayKey = pendingDayKey
+        pendingDayKey = nil
+        return dayKey
+    }
+}
+
 /// Ensures notifications are displayed even when the app is in the foreground.
 class SpikeNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(
@@ -28,6 +58,22 @@ class SpikeNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
+        let request = response.notification.request
+
+        // Tapping the 5 AM quote opens it directly, carrying the notification's
+        // own day so the sheet renders the quote that was actually delivered
+        // rather than re-deriving "today" at tap time.
+        if response.actionIdentifier == UNNotificationDefaultActionIdentifier,
+           request.identifier.hasPrefix(NotificationManager.quoteIdentifierPrefix) {
+            let dayKey = request.content.userInfo[NotificationManager.quoteDayInfoKey] as? String
+                ?? String(request.identifier.dropFirst(NotificationManager.quoteIdentifierPrefix.count))
+
+            QuoteDeepLink.set(dayKey)
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .spikeOpenQuoteOfTheDay, object: dayKey)
+            }
+        }
+
         completionHandler()
     }
 }
@@ -157,6 +203,13 @@ struct SpikeAIApp: App {
                     resetSignedOutSessionState()
                 }
             }
+            .onChange(of: localization.language) {
+                // Quote bodies are baked in days ahead, so rewrite them in the
+                // new language — otherwise the banner and the sheet would show
+                // the same quote in two different languages.
+                guard let uid = auth.userId else { return }
+                notifManager.scheduleDailyQuotes(userId: uid)
+            }
             .onChange(of: scenePhase) {
                 if scenePhase == .active {
                     Task { await auth.syncPendingProfileNameIfNeeded() }
@@ -201,8 +254,9 @@ struct SpikeAIApp: App {
             notifManager.scheduleNoGoalsReminder()
         }
 
-        // Schedule daily quote of the day notifications (5 AM, next 3 days, per-user)
-        notifManager.quoteTrackingStore = quoteTracking
+        // Queue the 5 AM quote notifications for this user. The bodies are
+        // derived from the same function the app displays from, so they stay in
+        // step no matter how far ahead they were written.
         notifManager.scheduleDailyQuotes(userId: uid)
 
         // Flush any operations queued while offline
@@ -257,6 +311,9 @@ struct SpikeAIApp: App {
         progressSummaryStore.resetForSignedOutUser()
         progressMilestones.resetForSignedOutUser()
         quoteTracking.resetForSignedOutUser()
+        // The queued quotes belong to the user who just signed out; leaving them
+        // would deliver their sequence to whoever signs in next.
+        notifManager.cancelDailyQuotes()
         TaskReminderStore.shared.clearAll()
     }
 }

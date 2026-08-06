@@ -108,75 +108,88 @@ Deno.serve(async (req) => {
     });
   }
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15_000);
-
-    const prompt = `Translate ONLY the quote text into ${targetLang}. Keep the same tone and meaning. Do NOT translate the author's name — keep it exactly as provided. Return ONLY the translation in this exact format:
+  const prompt = `Translate ONLY the quote text into ${targetLang}. Keep the same tone and meaning. Do NOT translate the author's name — keep it exactly as provided. Return ONLY the translation in this exact format:
 QUOTE: <translated quote>
 AUTHOR: ${body.author}
 
 Original quote: "${body.text}"`;
 
-    const response = await fetch(
-      "https://router.huggingface.co/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${hfToken}`,
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: "google/gemma-2-2b-it:cheapest",
-          temperature: 0.15,
-          max_tokens: 300,
-          messages: [
-            {
-              role: "system",
-              content: `You are a professional translator. Translate the quote text accurately into ${targetLang}. NEVER translate or modify the author's name — always keep it exactly as provided. Return ONLY the format requested.`,
-            },
-            { role: "user", content: prompt },
-          ],
-        }),
-      }
-    );
+  // Tried in order, all verified as live on the HF router.
+  // Note: do NOT reintroduce google/gemma-2-2b-it — the router stopped serving
+  // it, which silently left every quote untranslated.
+  const MODELS = [
+    "Qwen/Qwen2.5-72B-Instruct:cheapest",
+    "meta-llama/Llama-3.3-70B-Instruct:cheapest",
+    "Qwen/Qwen2.5-7B-Instruct:cheapest",
+  ];
 
-    clearTimeout(timeout);
+  for (const model of MODELS) {
+    if (didTranslate) break;
 
-    if (response.ok) {
-      const payload = await response.json();
-      const text =
-        typeof payload.choices?.[0]?.message?.content === "string"
-          ? payload.choices[0].message.content.trim()
-          : "";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20_000);
 
-      const quoteLine = text
-        .split(/\r?\n/)
-        .find((l: string) => l.toUpperCase().startsWith("QUOTE:"));
-
-      if (quoteLine) {
-        translatedText = quoteLine.replace(/^QUOTE:\s*/i, "").trim();
-        // Remove surrounding quotes if the model added them
-        if (
-          (translatedText.startsWith('"') && translatedText.endsWith('"')) ||
-          (translatedText.startsWith("\u201c") &&
-            translatedText.endsWith("\u201d"))
-        ) {
-          translatedText = translatedText.slice(1, -1).trim();
+    try {
+      const response = await fetch(
+        "https://router.huggingface.co/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${hfToken}`,
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model,
+            temperature: 0.15,
+            max_tokens: 300,
+            messages: [
+              {
+                role: "system",
+                content: `You are a professional translator. Translate the quote text accurately into ${targetLang}. NEVER translate or modify the author's name — always keep it exactly as provided. Return ONLY the format requested.`,
+              },
+              { role: "user", content: prompt },
+            ],
+          }),
         }
-        // Only mark as translated if text actually changed
-        if (translatedText && translatedText !== body.text) {
-          didTranslate = true;
+      );
+
+      if (response.ok) {
+        const payload = await response.json();
+        const text =
+          typeof payload.choices?.[0]?.message?.content === "string"
+            ? payload.choices[0].message.content.trim()
+            : "";
+
+        const quoteLine = text
+          .split(/\r?\n/)
+          .find((l: string) => l.toUpperCase().startsWith("QUOTE:"));
+
+        if (quoteLine) {
+          translatedText = quoteLine.replace(/^QUOTE:\s*/i, "").trim();
+          // Remove surrounding quotes if the model added them
+          if (
+            (translatedText.startsWith('"') && translatedText.endsWith('"')) ||
+            (translatedText.startsWith("\u201c") &&
+              translatedText.endsWith("\u201d"))
+          ) {
+            translatedText = translatedText.slice(1, -1).trim();
+          }
+          // Only mark as translated if text actually changed
+          if (translatedText && translatedText !== body.text) {
+            didTranslate = true;
+          }
         }
+        // Always keep the original author name
+        translatedAuthor = body.author;
+      } else {
+        console.error(`[translate-quote] ${model}:`, response.status, await response.text());
       }
-      // Always keep the original author name
-      translatedAuthor = body.author;
-    } else {
-      console.error("[translate-quote] HF response:", response.status, await response.text());
+    } catch (err) {
+      console.error(`[translate-quote] ${model} failed:`, err);
+    } finally {
+      clearTimeout(timeout);
     }
-  } catch (err) {
-    console.error("[translate-quote] HF failed:", err);
   }
 
   // Only cache if we actually got a real translation

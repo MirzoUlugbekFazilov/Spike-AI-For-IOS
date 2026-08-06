@@ -209,6 +209,11 @@ struct AlarmEntry: Codable {
     let title: String
     let time: Date
     var dismissed: Bool
+    /// Set once the system (AlarmKit) took ownership of this alarm. Optional so
+    /// entries written before AlarmKit existed still decode.
+    var alarmKit: Bool?
+
+    var isSystemAlarm: Bool { alarmKit == true }
 }
 
 @MainActor @Observable
@@ -267,45 +272,123 @@ final class TaskReminderStore {
     }
 
     // ── Alarm (persistent, rings until dismissed) ────────────────────
+
+    /// Legacy path only (iOS < 26, or AlarmKit declined). Repeats scheduled
+    /// after the alarm time so the phone keeps alerting while the app is
+    /// backgrounded or locked. iOS caps an app at 64 pending notifications, so
+    /// this stays deliberately modest — the first minute is a dense burst, then
+    /// it thins out over the following few minutes.
+    static let alarmBurstCount = 12
+    static let alarmBurstInterval: TimeInterval = 5
+    static let alarmTailCount = 10
+    static let alarmTailInterval: TimeInterval = 30
+    private static var alarmRepeatCount: Int { alarmBurstCount + alarmTailCount }
+
+    private func alarmIdentifiers(for taskId: String) -> [String] {
+        (0..<Self.alarmRepeatCount).map { "alarm-\(taskId)-\($0)" }
+    }
+
+    /// Offset of leg `index` from the alarm time.
+    private static func alarmLegOffset(_ index: Int) -> TimeInterval {
+        index < alarmBurstCount
+            ? Double(index) * alarmBurstInterval
+            : Double(alarmBurstCount) * alarmBurstInterval
+                + Double(index - alarmBurstCount + 1) * alarmTailInterval
+    }
+
     func setAlarm(for taskId: String, title: String, at date: Date) {
         guard date > Date().addingTimeInterval(10) else {
             print("[Spike AI] ⚠️ Alarm skipped — date \(date) is not >10s in the future")
             return
         }
-        var list = loadAlarms()
-        list.removeAll { $0.taskId == taskId }
-        list.append(AlarmEntry(taskId: taskId, title: sanitizedTitle(title), time: date, dismissed: false))
-        saveAlarms(list)
-        revision += 1
+        let name = sanitizedTitle(title)
 
-        let c = UNMutableNotificationContent()
-        c.title = AppLocalization.string("reminder")
-        c.body = sanitizedTitle(title)
-        c.sound = .default
-        c.interruptionLevel = .timeSensitive
-        let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-        let req = UNNotificationRequest(
-            identifier: "alarm-\(taskId)", content: c,
-            trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
-        )
+        // Optimistically record it as a system alarm when AlarmKit is available
+        // so the in-app overlay stays out of the way; corrected below if the
+        // system refuses to take it.
+        storeAlarmEntry(taskId: taskId, title: name, at: date, systemOwned: SpikeAlarmScheduler.isSupported)
+
         Task {
-            do {
-                try await UNUserNotificationCenter.current().add(req)
-                print("[Spike AI] ✅ Alarm scheduled for \(date) — id: alarm-\(taskId)")
-            } catch {
-                print("[Spike AI] ❌ Alarm scheduling FAILED: \(error.localizedDescription)")
+            let systemOwned = await SpikeAlarmScheduler.schedule(taskId: taskId, title: name, at: date)
+            storeAlarmEntry(taskId: taskId, title: name, at: date, systemOwned: systemOwned)
+            if !systemOwned {
+                await scheduleFallbackAlarmNotifications(taskId: taskId, title: name, at: date)
             }
         }
+    }
+
+    private func storeAlarmEntry(taskId: String, title: String, at date: Date, systemOwned: Bool) {
+        var list = loadAlarms()
+        list.removeAll { $0.taskId == taskId }
+        list.append(AlarmEntry(taskId: taskId, title: title, time: date,
+                               dismissed: false, alarmKit: systemOwned))
+        saveAlarms(list)
+        revision += 1
+    }
+
+    /// A single notification only chimes once. Chaining a burst keeps the phone
+    /// alerting until the user opens the app, where the full-screen overlay
+    /// takes over and rings until they press Stop.
+    private func scheduleFallbackAlarmNotifications(taskId: String, title: String, at date: Date) async {
+        let center = UNUserNotificationCenter.current()
+        var scheduled = 0
+
+        for index in 0..<Self.alarmRepeatCount {
+            let content = UNMutableNotificationContent()
+            content.title = AppLocalization.string("reminder")
+            content.body = title
+            content.sound = UNNotificationSound(named: UNNotificationSoundName(spikeAlarmSoundFileName))
+            content.interruptionLevel = .timeSensitive
+            content.userInfo = ["taskId": taskId, "kind": "alarm"]
+
+            let fireDate = date.addingTimeInterval(Self.alarmLegOffset(index))
+            let comps = Calendar.current.dateComponents(
+                [.year, .month, .day, .hour, .minute, .second], from: fireDate)
+
+            let request = UNNotificationRequest(
+                identifier: "alarm-\(taskId)-\(index)", content: content,
+                trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
+            )
+            do {
+                try await center.add(request)
+                scheduled += 1
+            } catch {
+                print("[Spike AI] ❌ Alarm leg \(request.identifier) FAILED: \(error.localizedDescription)")
+            }
+        }
+        print("[Spike AI] ✅ Fallback alarm scheduled for \(date) — \(scheduled)/\(Self.alarmRepeatCount) legs")
     }
 
     func getAlarmTime(for taskId: String) -> Date? {
         loadAlarms().first { $0.taskId == taskId }?.time
     }
 
+    /// The alarm the in-app overlay should present. System-owned alarms are
+    /// excluded — AlarmKit already puts its own full-screen alert in front of
+    /// everything, so showing ours too would double the ringing.
     func activeAlarm() -> (taskId: String, title: String)? {
         let now = Date()
-        return loadAlarms().first { $0.time <= now && !$0.dismissed }
+        return loadAlarms().first { $0.time <= now && !$0.dismissed && !$0.isSystemAlarm }
             .map { ($0.taskId, $0.title) }
+    }
+
+    /// Marks system alarms the user already stopped from the Lock Screen as
+    /// dismissed, so the task rows stop advertising a pending alarm.
+    func reconcileSystemAlarms() {
+        guard let live = SpikeAlarmScheduler.liveAlarmIDs() else { return }
+        var list = loadAlarms()
+        var changed = false
+        for index in list.indices where !list[index].dismissed && list[index].isSystemAlarm {
+            let id = SpikeAlarmScheduler.alarmID(for: list[index].taskId)
+            if !live.contains(id) {
+                list[index].dismissed = true
+                changed = true
+            }
+        }
+        if changed {
+            saveAlarms(list)
+            revision += 1
+        }
     }
 
     func dismissAlarm(taskId: String) {
@@ -314,6 +397,17 @@ final class TaskReminderStore {
             list[i].dismissed = true
             saveAlarms(list)
         }
+        revision += 1
+
+        // Stop means stop: silence the system alarm, kill the remaining legs of
+        // the fallback burst, and clear any that already landed in
+        // Notification Center.
+        SpikeAlarmScheduler.stop(taskId: taskId)
+        closeOverlayIfShowing(taskId)
+        let ids = alarmIdentifiers(for: taskId)
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: ids)
+        center.removeDeliveredNotifications(withIdentifiers: ids)
     }
 
     // ── Display helpers ──────────────────────────────────────────────
@@ -321,8 +415,17 @@ final class TaskReminderStore {
         getNotificationTime(for: taskId) ?? getAlarmTime(for: taskId)
     }
 
+    /// Still-pending alarm — drives the alarm badge on a task row.
     func hasAlarm(for taskId: String) -> Bool {
         loadAlarms().contains { $0.taskId == taskId && !$0.dismissed }
+    }
+
+    /// Task was set up as an alarm rather than a plain notification, whether or
+    /// not it has already rung. The Edit sheet needs this so reopening a task
+    /// whose alarm already fired doesn't silently downgrade it to a
+    /// notification on save.
+    func hasAlarmEntry(for taskId: String) -> Bool {
+        loadAlarms().contains { $0.taskId == taskId }
     }
 
     // ── Cleanup ──────────────────────────────────────────────────────
@@ -331,11 +434,19 @@ final class TaskReminderStore {
         UserDefaults.standard.set(d, forKey: notifKey)
         var a = loadAlarms(); a.removeAll { $0.taskId == taskId }; saveAlarms(a)
         revision += 1
-        UNUserNotificationCenter.current().removePendingNotificationRequests(
-            withIdentifiers: ["notif-\(taskId)", "alarm-\(taskId)"])
+
+        SpikeAlarmScheduler.cancel(taskId: taskId)
+        closeOverlayIfShowing(taskId)
+        let ids = ["notif-\(taskId)", "missed-alarm-\(taskId)"] + alarmIdentifiers(for: taskId)
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: ids)
+        center.removeDeliveredNotifications(withIdentifiers: ids)
     }
 
     func clearAll() {
+        for entry in loadAlarms() where entry.isSystemAlarm {
+            SpikeAlarmScheduler.cancel(taskId: entry.taskId)
+        }
         UserDefaults.standard.removeObject(forKey: notifKey)
         UserDefaults.standard.removeObject(forKey: alarmKey)
         UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
@@ -348,6 +459,15 @@ final class TaskReminderStore {
     }
 
     // ── Private ──────────────────────────────────────────────────────
+
+    /// Tears down the alarm window when the task it belongs to is stopped or
+    /// deleted from somewhere other than the overlay's own Stop button.
+    private func closeOverlayIfShowing(_ taskId: String) {
+        if AlarmWindowPresenter.shared.presentedTaskId == taskId {
+            AlarmWindowPresenter.shared.dismiss()
+        }
+    }
+
     private func notifDict() -> [String: Double] {
         UserDefaults.standard.dictionary(forKey: notifKey) as? [String: Double] ?? [:]
     }
@@ -386,9 +506,12 @@ struct ContentView: View {
     @AppStorage("spike_theme") private var themeRaw = "system"
     @AppStorage("spike_live_activity") private var liveActivityEnabled = false
     @AppStorage("spike_show_completed") private var showCompletedTasks = true
-    @State private var showAlarm = false
-    @State private var alarmTitle = ""
-    @State private var alarmTaskId = ""
+    @AppStorage("spike_quote_seen_date") private var quoteSeenDate = ""
+
+    // Quote of the Day opened from its 5 AM notification. Presented at the root
+    // so the tap lands on the quote whichever tab the user was last on.
+    @State private var quoteNotificationDay: String?
+    @State private var showQuoteFromNotification = false
 
     var body: some View {
         TabView {
@@ -403,7 +526,16 @@ struct ContentView: View {
         }
         .tint(Color.primary)
         .preferredColorScheme(themeScheme)
+        .fullScreenCover(isPresented: $showQuoteFromNotification) {
+            QuoteOfTheDaySheet(dayKey: quoteNotificationDay)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .spikeOpenQuoteOfTheDay)) { _ in
+            openQuoteFromNotification()
+        }
         .task {
+            // Covers a cold launch, where the tap is handled before this view
+            // exists and the posted notification has nowhere to land.
+            openQuoteFromNotification()
             if let userId = auth.userId { await dailyFocus.fetch(userId: userId) }
             await markPerfectDayIfNeeded()
             checkAlarms()
@@ -412,6 +544,7 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) {
             if scenePhase == .active {
+                openQuoteFromNotification()
                 usage.appBecameActive()
                 focusVM.onForeground()
                 checkAlarms()
@@ -436,14 +569,6 @@ struct ContentView: View {
         .onChange(of: liveActivityEnabled) {
             Task { await syncLiveActivity() }
         }
-        .fullScreenCover(isPresented: $showAlarm) {
-            AlarmOverlayView(title: alarmTitle, taskId: alarmTaskId) { wasDismissedByUser in
-                TaskReminderStore.shared.dismissAlarm(taskId: alarmTaskId)
-                showAlarm = false
-                // If user dismissed manually within 5 min, no notification needed.
-                // If auto-expired (wasDismissedByUser == false), notification was already sent by the overlay.
-            }
-        }
     }
 
     private var themeScheme: ColorScheme? {
@@ -454,9 +579,26 @@ struct ContentView: View {
         }
     }
 
+    /// Opens the Quote of the Day sheet for a tapped notification, if one is
+    /// waiting. `consume()` returns the day key only once, so calling this from
+    /// several lifecycle hooks is harmless.
+    private func openQuoteFromNotification() {
+        guard let dayKey = QuoteDeepLink.consume() else { return }
+        quoteNotificationDay = dayKey
+        // The user has now seen it — stop the home screen sparkle from nagging.
+        quoteSeenDate = QuoteTrackingStore.quoteDay()
+        showQuoteFromNotification = true
+    }
+
     private func checkAlarms() {
-        if let a = TaskReminderStore.shared.activeAlarm() {
-            alarmTaskId = a.taskId; alarmTitle = a.title; showAlarm = true
+        let store = TaskReminderStore.shared
+        store.reconcileSystemAlarms()
+        guard let a = store.activeAlarm() else { return }
+        // Presented in its own window so it covers sheets, the tab bar and any
+        // other in-app UI. AlarmKit alarms never reach here — the system already
+        // shows those over the Lock Screen.
+        AlarmWindowPresenter.shared.present(taskId: a.taskId, title: a.title, localization: loc) { taskId in
+            TaskReminderStore.shared.dismissAlarm(taskId: taskId)
         }
     }
 
@@ -490,17 +632,17 @@ struct ContentView: View {
 // MARK: - Alarm Overlay
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+/// Fallback alarm UI for systems without AlarmKit. It rings until the user
+/// presses Stop — there is no countdown and no time limit.
 struct AlarmOverlayView: View {
     @Environment(AppLocalization.self) private var loc
     let title: String
-    let taskId: String
-    let onDismiss: (_ wasDismissedByUser: Bool) -> Void
+    let onDismiss: () -> Void
     @State private var pulse = false
+    @State private var ringPulse = false
     @State private var soundTimer: Timer?
-    @State private var autoStopTimer: Timer?
+    @State private var vibrationTimer: Timer?
     @State private var audioPlayer: AVAudioPlayer?
-    @State private var remainingSeconds: Int = 300
-    @State private var countdownTimer: Timer?
 
     var body: some View {
         ZStack {
@@ -508,17 +650,12 @@ struct AlarmOverlayView: View {
             VStack(spacing: 36) {
                 Spacer()
 
-                // Countdown ring
                 ZStack {
                     Circle()
-                        .stroke(Color.white.opacity(0.08), lineWidth: 6)
+                        .stroke(Color.orange.opacity(0.85), lineWidth: 6)
                         .frame(width: 160, height: 160)
-                    Circle()
-                        .trim(from: 0, to: CGFloat(remainingSeconds) / 300.0)
-                        .stroke(Color.orange.gradient, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                        .frame(width: 160, height: 160)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.linear(duration: 1), value: remainingSeconds)
+                        .scaleEffect(ringPulse ? 1.06 : 1.0)
+                        .animation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true), value: ringPulse)
                     Image(systemName: "alarm.fill")
                         .font(.system(size: 56))
                         .foregroundStyle(.orange)
@@ -531,19 +668,15 @@ struct AlarmOverlayView: View {
                     Text(title)
                         .font(.title.weight(.bold)).foregroundStyle(.white)
                         .multilineTextAlignment(.center).padding(.horizontal, 24)
-                    Text(timeString)
-                        .font(.system(size: 20, weight: .medium, design: .monospaced))
-                        .foregroundStyle(.orange.opacity(0.8))
-                        .padding(.top, 4)
                 }
 
                 Spacer()
 
                 Button {
                     stopAlarmSound()
-                    onDismiss(true)
+                    onDismiss()
                 } label: {
-                    Text(loc["dismiss"])
+                    Label(loc["alarm_stop"], systemImage: "stop.fill")
                         .font(.title3.weight(.semibold)).foregroundStyle(.white)
                         .frame(maxWidth: .infinity).padding(.vertical, 18)
                         .background(Color.orange.gradient)
@@ -555,63 +688,51 @@ struct AlarmOverlayView: View {
         }
         .onAppear {
             pulse = true
+            ringPulse = true
+            // The screen must not dim away while the alarm is going off.
+            UIApplication.shared.isIdleTimerDisabled = true
             startAlarmSound()
-            startAutoStopTimer()
-            startCountdown()
         }
         .onDisappear { stopAlarmSound() }
     }
 
-    private var timeString: String {
-        let m = remainingSeconds / 60
-        let s = remainingSeconds % 60
-        return String(format: "%d:%02d", m, s)
-    }
-
     private func startAlarmSound() {
-        // Play system alarm sound repeatedly
-        AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
-        AudioServicesPlayAlertSound(1005) // system alarm tone
-        soundTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
-            AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
+        // .playback so the tone still rings with the silent switch on — an alarm
+        // the mute switch can kill is not an alarm.
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.playback, mode: .default, options: [.duckOthers])
+        try? session.setActive(true, options: [])
+
+        if let url = Bundle.main.url(forResource: (spikeAlarmSoundFileName as NSString).deletingPathExtension,
+                                     withExtension: (spikeAlarmSoundFileName as NSString).pathExtension),
+           let player = try? AVAudioPlayer(contentsOf: url) {
+            player.numberOfLoops = -1        // rings until the user presses Stop
+            player.volume = 1.0
+            player.prepareToPlay()
+            player.play()
+            audioPlayer = player
+        } else {
+            // Bundled tone missing — fall back to the system alert so the alarm
+            // is never silent.
             AudioServicesPlayAlertSound(1005)
+            soundTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
+                AudioServicesPlayAlertSound(1005)
+            }
+        }
+
+        // Vibration runs on its own cadence alongside the tone.
+        AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
+        vibrationTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { _ in
+            AudioServicesPlayAlertSound(SystemSoundID(kSystemSoundID_Vibrate))
         }
     }
 
     private func stopAlarmSound() {
         soundTimer?.invalidate(); soundTimer = nil
-        autoStopTimer?.invalidate(); autoStopTimer = nil
-        countdownTimer?.invalidate(); countdownTimer = nil
+        vibrationTimer?.invalidate(); vibrationTimer = nil
         audioPlayer?.stop(); audioPlayer = nil
-    }
-
-    private func startAutoStopTimer() {
-        autoStopTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: false) { _ in
-            // 5 minutes elapsed without dismissal — send missed notification
-            stopAlarmSound()
-            scheduleMissedNotification()
-            onDismiss(false)
-        }
-    }
-
-    private func startCountdown() {
-        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            if remainingSeconds > 0 { remainingSeconds -= 1 }
-        }
-    }
-
-    private func scheduleMissedNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = loc["missed_alarm"] == "missed_alarm" ? "Missed Alarm" : loc["missed_alarm"]
-        content.body = String(format: AppLocalization.string("missed_alarm_for"), title)
-        content.sound = .default
-        content.interruptionLevel = .timeSensitive
-        let request = UNNotificationRequest(
-            identifier: "missed-alarm-\(taskId)",
-            content: content,
-            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-        )
-        UNUserNotificationCenter.current().add(request)
+        UIApplication.shared.isIdleTimerDisabled = false
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 }
 
@@ -627,6 +748,7 @@ struct HomeTabView: View {
     @Environment(AppLocalization.self) private var loc
     @AppStorage("spike_show_completed") private var showCompletedTasks = true
     @State private var showAdd = false
+    @State private var showVoice = false
     @State private var selectedDate = Date()
     @State private var showDatePicker = false
     @State private var showQuote = false
@@ -668,12 +790,18 @@ struct HomeTabView: View {
                     .padding(.bottom, 90)
                     .iPadReadableScroll()
                 }
-                if !isPastDate { fab }
+                if !isPastDate { actionStack }
             }
             .background { SpikeGradientBackground() }
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showAdd) {
                 AddTaskSheet(isPresented: $showAdd, initialDate: selectedDate)
+            }
+            .sheet(isPresented: $showVoice) {
+                // Jump Home to the day the goals landed on so they're visible.
+                VoiceGoalSheet { day in
+                    withAnimation(.easeInOut(duration: 0.25)) { selectedDate = day }
+                }
             }
             .sheet(isPresented: $showDatePicker) { datePickerSheet }
             .sheet(item: $editingTask) { task in
@@ -686,13 +814,7 @@ struct HomeTabView: View {
     // MARK: Logo
 
     private var hasSeenTodayQuote: Bool {
-        let adjusted = Calendar.current.date(byAdding: .hour, value: -5, to: Date()) ?? Date()
-        let today = {
-            let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-            f.locale = Locale(identifier: "en_US_POSIX")
-            return f.string(from: adjusted)
-        }()
-        return quoteSeenDate == today
+        quoteSeenDate == QuoteTrackingStore.quoteDay()
     }
 
     private func startQuoteAnimationIfNeeded() {
@@ -722,13 +844,7 @@ struct HomeTabView: View {
             }
             Spacer()
             Button {
-                let adjusted = Calendar.current.date(byAdding: .hour, value: -5, to: Date()) ?? Date()
-                let today = {
-                    let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
-                    f.locale = Locale(identifier: "en_US_POSIX")
-                    return f.string(from: adjusted)
-                }()
-                quoteSeenDate = today
+                quoteSeenDate = QuoteTrackingStore.quoteDay()
                 showQuote = true
                 // Stop animations immediately
                 withAnimation(.easeOut(duration: 0.3)) {
@@ -1012,6 +1128,15 @@ struct HomeTabView: View {
         }
     }
 
+    /// Voice capture sits directly above the "+" button.
+    private var actionStack: some View {
+        VStack(spacing: 14) {
+            VoiceGoalButton(isDisabled: allSelectedTasks.count >= 25) { showVoice = true }
+            fab
+        }
+        .padding(.trailing, 20).padding(.bottom, 16)
+    }
+
     private var fab: some View {
         let atLimit = allSelectedTasks.count >= 25
         return Button { showAdd = true } label: {
@@ -1022,7 +1147,52 @@ struct HomeTabView: View {
         }
         .disabled(atLimit)
         .opacity(atLimit ? 0.4 : 1)
-        .padding(.trailing, 20).padding(.bottom, 16)
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MARK: - Alarm Toggle Row
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/// "Ring like an alarm" switch, shared by the Add and Edit task sheets.
+/// When on, the scheduled time rings continuously instead of chiming once.
+struct AlarmToggleRow: View {
+    @Binding var isOn: Bool
+    let loc: AppLocalization
+
+    var body: some View {
+        Toggle(isOn: Binding(
+            get: { isOn },
+            set: { newValue in
+                withAnimation(.easeInOut(duration: 0.2)) { isOn = newValue }
+                // Ask for AlarmKit up front. Without it the alarm silently
+                // degrades to a notification instead of taking over the
+                // Lock Screen, so the user should see the prompt here — while
+                // they are deciding — not after they save.
+                guard newValue, SpikeAlarmScheduler.isSupported else { return }
+                Task { await SpikeAlarmScheduler.requestAuthorization() }
+            }
+        )) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 7)
+                        .fill(isOn ? Color.orange : Color(.systemGray5))
+                        .frame(width: 32, height: 32)
+                    Image(systemName: isOn ? "alarm.fill" : "alarm")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(isOn ? .white : .gray)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(loc["alarm_sound"])
+                        .font(.subheadline.weight(.semibold))
+                    Text(loc["reminder_desc"])
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
+            }
+        }
+        .tint(.orange)
     }
 }
 
@@ -1041,6 +1211,8 @@ struct EditTaskSheet: View {
     @State private var scheduledDate: Date
     @State private var hasNotification: Bool
     @State private var notifTime: Date
+    @State private var isAlarm: Bool
+    @State private var isSaving = false
 
     init(task: TaskRecord, title: String, store: TaskStore) {
         self.task = task
@@ -1059,6 +1231,7 @@ struct EditTaskSheet: View {
         let existingTime = TaskReminderStore.shared.displayTime(for: task.id)
         _hasNotification = State(initialValue: existingTime != nil)
         _notifTime = State(initialValue: existingTime ?? Date().addingTimeInterval(120))
+        _isAlarm = State(initialValue: TaskReminderStore.shared.hasAlarmEntry(for: task.id))
     }
 
     private var scheduledKey: String {
@@ -1145,6 +1318,17 @@ struct EditTaskSheet: View {
                             ? Date().addingTimeInterval(60)
                             : Calendar.current.startOfDay(for: scheduledDate)
                         DatePicker(loc["time"], selection: $notifTime, in: minTime..., displayedComponents: .hourAndMinute)
+                            .onChange(of: scheduledDate) {
+                                // Moving the task to today can leave the saved
+                                // time already in the past, which would make the
+                                // reminder silently never fire.
+                                let merged = mergeTime(notifTime, into: scheduledDate)
+                                if Calendar.current.isDateInToday(scheduledDate),
+                                   merged < Date().addingTimeInterval(60) {
+                                    notifTime = Date().addingTimeInterval(120)
+                                }
+                            }
+                        AlarmToggleRow(isOn: $isAlarm, loc: loc)
                     }
                 }
             }
@@ -1153,33 +1337,45 @@ struct EditTaskSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(loc["cancel"]) { dismiss() }
+                        .disabled(isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(loc["save"]) { saveTask() }
                         .fontWeight(.semibold)
-                        .disabled(!canSave)
+                        .disabled(!canSave || isSaving)
                 }
             }
         }
     }
 
     private func saveTask() {
+        // Save runs across awaits; without this a second tap would update the
+        // task and re-schedule the reminder a second time.
+        guard !isSaving else { return }
+        isSaving = true
+
         Task {
             await store.updateTask(task, title: title, priority: priority, scheduledDate: scheduledKey)
 
             // Update notification
             TaskReminderStore.shared.removeAll(for: task.id)
-            if hasNotification {
-                let center = UNUserNotificationCenter.current()
-                let settings = await center.notificationSettings()
-                if settings.authorizationStatus != .authorized {
-                    _ = try? await center.requestAuthorization(options: [.alert, .badge, .sound, .timeSensitive])
-                }
+            if hasNotification, await requestNotificationPermission() {
                 let date = mergeTime(notifTime, into: scheduledDate)
-                TaskReminderStore.shared.setNotification(for: task.id, title: title, at: date)
+                if isAlarm {
+                    TaskReminderStore.shared.setAlarm(for: task.id, title: title, at: date)
+                } else {
+                    TaskReminderStore.shared.setNotification(for: task.id, title: title, at: date)
+                }
             }
+            isSaving = false
             dismiss()
         }
+    }
+
+    private func requestNotificationPermission() async -> Bool {
+        let center = UNUserNotificationCenter.current()
+        if await center.notificationSettings().authorizationStatus == .authorized { return true }
+        return (try? await center.requestAuthorization(options: [.alert, .badge, .sound, .timeSensitive])) ?? false
     }
 
     private func mergeTime(_ time: Date, into base: Date) -> Date {
@@ -1206,6 +1402,9 @@ struct AddTaskSheet: View {
     @State private var scheduledDate = Date()
     @State private var hasNotification = false
     @State private var notifTime = Date().addingTimeInterval(120) // default: 2 min from now
+    @State private var isAlarm = false
+    @State private var isSaving = false
+    @State private var didApplyInitialDate = false
 
     private var scheduledKey: String {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
@@ -1303,6 +1502,7 @@ struct AddTaskSheet: View {
                                     notifTime = Date().addingTimeInterval(120)
                                 }
                             }
+                        AlarmToggleRow(isOn: $isAlarm, loc: loc)
                     }
                 }
 
@@ -1320,19 +1520,31 @@ struct AddTaskSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(loc["cancel"]) { isPresented = false }
+                        .disabled(isSaving)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(loc["add"]) { addTask() }
                         .fontWeight(.semibold)
-                        .disabled(!canSave)
+                        .disabled(!canSave || isSaving)
                 }
             }
-            .onAppear { scheduledDate = initialDate }
+            .onAppear {
+                // Only on first appearance — onAppear fires again when the app
+                // returns to the foreground, which would otherwise throw away
+                // the date the user just picked.
+                guard !didApplyInitialDate else { return }
+                didApplyInitialDate = true
+                scheduledDate = initialDate
+            }
         }
     }
 
     private func addTask() {
+        // Each call mints a fresh task id, so a double tap while the insert is
+        // in flight would create two identical goals.
+        guard !isSaving else { return }
         guard let userId = auth.userId, tasksOnDate < 25 else { return }
+        isSaving = true
         let taskId = UUID().uuidString
         Task {
             let notificationsAllowed = hasNotification
@@ -1342,8 +1554,13 @@ struct AddTaskSheet: View {
             await store.add(id: taskId, title: title, priority: priority, scheduledDate: scheduledKey, userId: userId)
             if hasNotification && notificationsAllowed {
                 let date = mergeTime(notifTime, into: scheduledDate)
-                TaskReminderStore.shared.setNotification(for: taskId, title: title, at: date)
+                if isAlarm {
+                    TaskReminderStore.shared.setAlarm(for: taskId, title: title, at: date)
+                } else {
+                    TaskReminderStore.shared.setNotification(for: taskId, title: title, at: date)
+                }
             }
+            isSaving = false
             isPresented = false
         }
     }
@@ -1732,38 +1949,39 @@ struct ProgressCard<Content: View>: View {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 enum QuoteOfTheDayManager {
-    /// Returns today's quote using the Supabase-backed QuoteTrackingStore.
-    static func todayQuote(userId: UUID?, store: QuoteTrackingStore?) -> DailyQuote {
-        guard let uid = userId, let store else {
-            // Fallback for logged-out state
-            let today = QuoteTrackingStore.quoteDay()
-            let hash = today.utf8.reduce(0) { $0 &+ Int($1) }
-            return QuotesData.all[abs(hash) % QuotesData.all.count]
-        }
+    /// The quote for a given quote day. Delegates to the same pure function the
+    /// 5 AM notification uses, so the banner and the sheet can never disagree —
+    /// signed in or out, online or off.
+    static func quote(userId: UUID?, dayKey: String = QuoteTrackingStore.quoteDay()) -> DailyQuote {
+        QuoteTrackingStore.quote(userId: userId, dayKey: dayKey)
+    }
 
-        let idx = store.pickQuote(userId: uid)
-        let safeIdx = max(0, min(idx, QuotesData.all.count - 1))
-        return QuotesData.all[safeIdx]
+    /// Index of the quote for a given quote day, for translation lookups.
+    static func quoteIndex(userId: UUID?, dayKey: String = QuoteTrackingStore.quoteDay()) -> Int {
+        QuoteTrackingStore.quoteIndex(userId: userId, dayKey: dayKey)
+    }
+
+    /// Today's quote. Signed-in users additionally get the pick recorded in the
+    /// tracking store for cross-device history; the value returned is the same
+    /// either way.
+    static func todayQuote(userId: UUID?, store: QuoteTrackingStore?) -> DailyQuote {
+        guard let uid = userId, let store else { return quote(userId: userId) }
+
+        let index = store.pickQuote(userId: uid)
+        return QuotesData.all[max(0, min(index, QuotesData.all.count - 1))]
     }
 
     /// Returns the next quote delivery time (5 AM tomorrow or today if before 5 AM).
     static func nextQuoteDate() -> Date {
         let cal = Calendar.current
         let now = Date()
-        var components = cal.dateComponents([.year, .month, .day], from: now)
-        components.hour = 5
-        components.minute = 0
-        components.second = 0
+        let hour = QuoteTrackingStore.quoteHour
 
-        if let today5am = cal.date(from: components), now < today5am {
+        if let today5am = cal.date(bySettingHour: hour, minute: 0, second: 0, of: now), now < today5am {
             return today5am
         }
         let tomorrow = cal.date(byAdding: .day, value: 1, to: now) ?? now
-        var tmrComponents = cal.dateComponents([.year, .month, .day], from: tomorrow)
-        tmrComponents.hour = 5
-        tmrComponents.minute = 0
-        tmrComponents.second = 0
-        return cal.date(from: tmrComponents) ?? tomorrow
+        return cal.date(bySettingHour: hour, minute: 0, second: 0, of: tomorrow) ?? tomorrow
     }
 
     /// Returns a human-readable countdown to the next quote.
@@ -1780,12 +1998,21 @@ enum QuoteOfTheDayManager {
 }
 
 struct QuoteOfTheDaySheet: View {
+    /// Quote day to display. Set when the sheet is opened from a notification so
+    /// it shows precisely the quote that notification delivered — even if the
+    /// user taps the banner the next morning, after the boundary has rolled
+    /// over. `nil` means today.
+    var dayKey: String? = nil
+
     @Environment(\.dismiss) private var dismiss
     @Environment(AuthManager.self) private var auth
     @Environment(AppLocalization.self) private var loc
     @Environment(QuoteTrackingStore.self) private var quoteTracking
 
-    private var quote: DailyQuote { QuoteOfTheDayManager.todayQuote(userId: auth.userId, store: quoteTracking) }
+    private var resolvedDay: String { dayKey ?? QuoteTrackingStore.quoteDay() }
+    private var isToday: Bool { resolvedDay == QuoteTrackingStore.quoteDay() }
+    private var quoteIndex: Int { QuoteOfTheDayManager.quoteIndex(userId: auth.userId, dayKey: resolvedDay) }
+    private var quote: DailyQuote { QuoteOfTheDayManager.quote(userId: auth.userId, dayKey: resolvedDay) }
 
     var body: some View {
         ZStack {
@@ -1868,10 +2095,12 @@ struct QuoteOfTheDaySheet: View {
             }
         }
         .task {
-            if let uid = auth.userId {
-                let idx = quoteTracking.pickQuote(userId: uid)
-                await quoteTracking.loadTranslationAsync(quoteIndex: idx, language: loc.language)
+            // Record the pick for cross-device history, but only for today —
+            // reopening an older notification must not rewrite the day's entry.
+            if let uid = auth.userId, isToday {
+                _ = quoteTracking.pickQuote(userId: uid)
             }
+            await quoteTracking.loadTranslationAsync(quoteIndex: quoteIndex, language: loc.language)
         }
     }
 }

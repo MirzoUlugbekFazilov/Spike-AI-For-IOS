@@ -59,6 +59,7 @@ enum LALocalization {
     private static let translations: [String: [String: String]] = [
         "en": [
             "today": "Today",
+            "reminder_title": "Reminder",
             "tasks": "Tasks",
             "streak": "Streak",
             "done_label": "Done",
@@ -67,6 +68,7 @@ enum LALocalization {
         ],
         "es": [
             "today": "Hoy",
+            "reminder_title": "Recordatorio",
             "tasks": "Tareas",
             "streak": "Racha",
             "done_label": "Hecho",
@@ -75,6 +77,7 @@ enum LALocalization {
         ],
         "fr": [
             "today": "Aujourd'hui",
+            "reminder_title": "Rappel",
             "tasks": "Tâches",
             "streak": "Série",
             "done_label": "Fait",
@@ -83,6 +86,7 @@ enum LALocalization {
         ],
         "de": [
             "today": "Heute",
+            "reminder_title": "Erinnerung",
             "tasks": "Aufgaben",
             "streak": "Serie",
             "done_label": "Erledigt",
@@ -91,6 +95,7 @@ enum LALocalization {
         ],
         "pt": [
             "today": "Hoje",
+            "reminder_title": "Lembrete",
             "tasks": "Tarefas",
             "streak": "Sequência",
             "done_label": "Feito",
@@ -99,6 +104,7 @@ enum LALocalization {
         ],
         "ru": [
             "today": "Сегодня",
+            "reminder_title": "Напоминание",
             "tasks": "Задачи",
             "streak": "Серия",
             "done_label": "Готово",
@@ -107,6 +113,7 @@ enum LALocalization {
         ],
         "uz": [
             "today": "Bugun",
+            "reminder_title": "Eslatma",
             "tasks": "Vazifalar",
             "streak": "Ketma-ketlik",
             "done_label": "Bajarildi",
@@ -115,6 +122,7 @@ enum LALocalization {
         ],
         "zh": [
             "today": "今天",
+            "reminder_title": "提醒",
             "tasks": "任务",
             "streak": "连续",
             "done_label": "完成",
@@ -123,6 +131,7 @@ enum LALocalization {
         ],
         "ja": [
             "today": "今日",
+            "reminder_title": "リマインダー",
             "tasks": "タスク",
             "streak": "連続",
             "done_label": "完了",
@@ -131,6 +140,7 @@ enum LALocalization {
         ],
         "ko": [
             "today": "오늘",
+            "reminder_title": "리마인더",
             "tasks": "작업",
             "streak": "연속",
             "done_label": "완료",
@@ -139,6 +149,7 @@ enum LALocalization {
         ],
         "ar": [
             "today": "اليوم",
+            "reminder_title": "تذكير",
             "tasks": "المهام",
             "streak": "السلسلة",
             "done_label": "تم",
@@ -147,6 +158,7 @@ enum LALocalization {
         ],
         "hi": [
             "today": "आज",
+            "reminder_title": "रिमाइंडर",
             "tasks": "कार्य",
             "streak": "स्ट्रीक",
             "done_label": "पूर्ण",
@@ -155,6 +167,7 @@ enum LALocalization {
         ],
         "tr": [
             "today": "Bugün",
+            "reminder_title": "Hatırlatıcı",
             "tasks": "Görevler",
             "streak": "Seri",
             "done_label": "Tamam",
@@ -163,6 +176,7 @@ enum LALocalization {
         ],
         "it": [
             "today": "Oggi",
+            "reminder_title": "Promemoria",
             "tasks": "Attività",
             "streak": "Serie",
             "done_label": "Fatto",
@@ -171,6 +185,7 @@ enum LALocalization {
         ],
         "pl": [
             "today": "Dziś",
+            "reminder_title": "Przypomnienie",
             "tasks": "Zadania",
             "streak": "Seria",
             "done_label": "Gotowe",
@@ -179,6 +194,7 @@ enum LALocalization {
         ],
         "uk": [
             "today": "Сьогодні",
+            "reminder_title": "Нагадування",
             "tasks": "Завдання",
             "streak": "Серія",
             "done_label": "Готово",
@@ -187,6 +203,7 @@ enum LALocalization {
         ],
         "nl": [
             "today": "Vandaag",
+            "reminder_title": "Herinnering",
             "tasks": "Taken",
             "streak": "Reeks",
             "done_label": "Klaar",
@@ -195,6 +212,7 @@ enum LALocalization {
         ],
         "sv": [
             "today": "Idag",
+            "reminder_title": "Påminnelse",
             "tasks": "Uppgifter",
             "streak": "Svit",
             "done_label": "Klart",
@@ -203,6 +221,7 @@ enum LALocalization {
         ],
         "id": [
             "today": "Hari Ini",
+            "reminder_title": "Pengingat",
             "tasks": "Tugas",
             "streak": "Streak",
             "done_label": "Selesai",
@@ -211,6 +230,7 @@ enum LALocalization {
         ],
         "vi": [
             "today": "Hôm nay",
+            "reminder_title": "Nhắc nhở",
             "tasks": "Nhiệm vụ",
             "streak": "Chuỗi",
             "done_label": "Xong",
@@ -219,6 +239,7 @@ enum LALocalization {
         ],
         "kk": [
             "today": "Бүгін",
+            "reminder_title": "Eskertwme",
             "tasks": "Тапсырмалар",
             "streak": "Сериясы",
             "done_label": "Дайын",
@@ -227,6 +248,7 @@ enum LALocalization {
         ],
         "ms": [
             "today": "Hari Ini",
+            "reminder_title": "Peringatan",
             "tasks": "Tugasan",
             "streak": "Kesinambungan",
             "done_label": "Siap",
@@ -235,6 +257,7 @@ enum LALocalization {
         ],
         "tg": [
             "today": "Имрӯз",
+            "reminder_title": "Ёдовар",
             "tasks": "Вазифаҳо",
             "streak": "Силсила",
             "done_label": "Тайёр",

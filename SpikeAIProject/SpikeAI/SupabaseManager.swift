@@ -824,56 +824,94 @@ final class QuoteTrackingStore {
         hasFetched = true
     }
 
-    /// Pick a unique quote for today. Returns the index.
+    /// Today's quote index.
     func pickQuote(userId: UUID) -> Int {
         let today = Self.quoteDay()
-        let total = QuotesData.all.count
+        let chosen = Self.quoteIndex(userId: userId, dayKey: today)
 
-        // Already picked today
-        if lastQuoteDate == today, let idx = lastQuoteIndex, idx >= 0, idx < total {
-            return idx
-        }
-
-        // Reset if all exhausted
-        if usedIndices.count >= total {
-            usedIndices = []
-        }
-
-        let available = Set(0..<total).subtracting(usedIndices)
-        let chosen = available.randomElement() ?? Int.random(in: 0..<total)
-
-        usedIndices.insert(chosen)
-        lastQuoteIndex = chosen
-        lastQuoteDate = today
-
-        // Save locally first (instant)
-        saveLocalCache(userId: userId)
-
-        // Sync to Supabase in background
-        Task {
-            await syncToSupabase(userId: userId)
+        // Kept for the translation cache and cross-device history; correctness
+        // no longer depends on it.
+        if lastQuoteDate != today || lastQuoteIndex != chosen {
+            usedIndices.insert(chosen)
+            lastQuoteIndex = chosen
+            lastQuoteDate = today
+            saveLocalCache(userId: userId)
+            Task { await syncToSupabase(userId: userId) }
         }
 
         return chosen
     }
 
-    /// Pick a quote for notifications (may differ from today's in-app quote).
-    func pickNotificationQuote(userId: UUID) -> Int {
-        let total = QuotesData.all.count
+    // ── Deterministic daily quote ────────────────────────────────────────
+    //
+    // The 5 AM notification is scheduled up to three days in advance, long
+    // before the app knows what it will display that morning. Previously each
+    // side drew its own random index, so they could never agree — and because
+    // the notification's pick was added to `usedIndices`, the in-app pick
+    // actively excluded it, guaranteeing a mismatch.
+    //
+    // Both sides now derive the index from the same pure function of
+    // (user, calendar day). There is no shared state left to drift, it needs no
+    // network, and it survives reinstalls.
 
-        if usedIndices.count >= total {
-            usedIndices = []
+    /// The quote shown for a user on a given quote day. Single source of truth
+    /// for both the in-app card and the 5 AM notification body.
+    nonisolated static func quote(userId: UUID?, dayKey: String) -> DailyQuote {
+        let index = quoteIndex(userId: userId, dayKey: dayKey)
+        return QuotesData.all[max(0, min(index, QuotesData.all.count - 1))]
+    }
+
+    /// Quote index for a given user and quote-day key ("yyyy-MM-dd").
+    /// A nil user (signed out) still gets a stable per-day quote.
+    nonisolated static func quoteIndex(userId: UUID?, dayKey: String) -> Int {
+        let total = QuotesData.all.count
+        guard total > 0 else { return 0 }
+
+        // A per-user shuffle of the whole catalogue: two users rarely share a
+        // day's quote, and nothing repeats until every quote has been shown.
+        var generator = SplitMix64(seed: userId.map(seed(for:)) ?? 0x5EED_5EED_5EED_5EED)
+        var order = Array(0..<total)
+        if total > 1 {
+            for index in stride(from: total - 1, through: 1, by: -1) {
+                let swapWith = Int(generator.next() % UInt64(index + 1))
+                order.swapAt(index, swapWith)
+            }
         }
 
-        let available = Set(0..<total).subtracting(usedIndices)
-        let chosen = available.randomElement() ?? Int.random(in: 0..<total)
+        let day = dayNumber(from: dayKey)
+        return order[((day % total) + total) % total]
+    }
 
-        usedIndices.insert(chosen)
-        saveLocalCache(userId: userId)
+    /// Days since 1970 for a plain "yyyy-MM-dd" key. Fixed to UTC so the same
+    /// key always yields the same number regardless of where the device is.
+    nonisolated private static func dayNumber(from dayKey: String) -> Int {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        guard let date = formatter.date(from: dayKey) else { return 0 }
+        return Int((date.timeIntervalSince1970 / 86_400).rounded())
+    }
 
-        Task { await syncToSupabase(userId: userId) }
+    nonisolated private static func seed(for userId: UUID) -> UInt64 {
+        let bytes = withUnsafeBytes(of: userId.uuid) { Array($0) }
+        var hash: UInt64 = 0xCBF2_9CE4_8422_2325          // FNV-1a offset basis
+        for byte in bytes {
+            hash ^= UInt64(byte)
+            hash = hash &* 0x0000_0100_0000_01B3          // FNV prime
+        }
+        return hash
+    }
 
-        return chosen
+    private struct SplitMix64 {
+        var seed: UInt64
+        mutating func next() -> UInt64 {
+            seed &+= 0x9E37_79B9_7F4A_7C15
+            var z = seed
+            z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+            z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+            return z ^ (z >> 31)
+        }
     }
 
     // MARK: - Supabase Sync
@@ -914,13 +952,38 @@ final class QuoteTrackingStore {
         }
     }
 
-    /// Quote day boundary: 5 AM (same as the rest of the feature).
-    static func quoteDay(for date: Date = Date()) -> String {
-        let adjusted = Calendar.current.date(byAdding: .hour, value: -5, to: date) ?? date
+    // MARK: - Quote day
+
+    /// Local hour at which the day's quote changes over. The notification fires
+    /// at this hour and the app starts showing that day's quote at the same
+    /// moment, so a user who taps the banner sees exactly what it delivered.
+    nonisolated static let quoteHour = 5
+
+    /// "yyyy-MM-dd" key naming the calendar day `date` falls in, read in the
+    /// calendar's own time zone — the format `quoteIndex(userId:dayKey:)` expects.
+    nonisolated static func dayKey(for date: Date, calendar: Calendar = .current) -> String {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         f.locale = Locale(identifier: "en_US_POSIX")
-        return f.string(from: adjusted)
+        f.calendar = Calendar(identifier: .gregorian)
+        f.timeZone = calendar.timeZone
+        return f.string(from: date)
+    }
+
+    /// The quote day containing `date`. Before 5 AM the previous day's quote is
+    /// still the current one, so nothing changes between the user going to bed
+    /// and the notification arriving.
+    ///
+    /// This walks the calendar rather than subtracting five fixed hours: across
+    /// a daylight-saving transition a fixed offset lands on the wrong calendar
+    /// day for an hour, which would desynchronise the app from a notification
+    /// whose fire date is pure wall-clock arithmetic.
+    nonisolated static func quoteDay(for date: Date = Date(), calendar: Calendar = .current) -> String {
+        let boundary = calendar.date(bySettingHour: quoteHour, minute: 0, second: 0, of: date) ?? date
+        let day = date < boundary
+            ? (calendar.date(byAdding: .day, value: -1, to: date) ?? date)
+            : date
+        return dayKey(for: day, calendar: calendar)
     }
 
     // MARK: - Translation

@@ -42,6 +42,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * Tried in order, all verified as live on the HF router. Qwen 2.5 72B leads
+ * because summaries are written in the user's own language and it is the
+ * strongest multilingual option here.
+ *
+ * Note: do NOT reintroduce google/gemma-2-2b-it — the router stopped serving it,
+ * which silently pushed every summary onto buildFallbackSummary().
+ */
+const MODELS = [
+  "Qwen/Qwen2.5-72B-Instruct:cheapest",
+  "meta-llama/Llama-3.3-70B-Instruct:cheapest",
+  "Qwen/Qwen2.5-7B-Instruct:cheapest",
+];
+
+const MODEL_TIMEOUT_MS = 20_000;
+
 Deno.serve(async (req) => {
   try {
     if (req.method === "OPTIONS") {
@@ -201,9 +217,6 @@ function isSafeTextArray(values: string[]) {
 }
 
 async function generateWithHuggingFace(body: ProgressSummaryRequest, token: string) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort("Hugging Face request timed out"), 12_000);
-
   const completionRate = body.completed_tasks.length + body.missed_tasks.length > 0
     ? Math.round((body.completed_tasks.length / (body.completed_tasks.length + body.missed_tasks.length)) * 100)
     : 0;
@@ -259,41 +272,53 @@ Average daily screen time: ${body.average_screen_time_minutes} minutes
 Active goals: ${body.goals.join(", ") || "None set"}
 `;
 
-  try {
-    const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${token}`,
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        model: "google/gemma-2-2b-it:cheapest",
-        temperature: 0.25,
-        max_tokens: 420,
-        messages: [
-          {
-            role: "system",
-            content: "Return exactly the requested plain text format. No markdown, no code fences, no extra commentary.",
-          },
-          { role: "user", content: prompt },
-        ],
-      }),
-    });
+  let lastError: unknown;
+  for (const model of MODELS) {
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort("Hugging Face request timed out"),
+      MODEL_TIMEOUT_MS,
+    );
+    try {
+      const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${token}`,
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model,
+          temperature: 0.25,
+          max_tokens: 420,
+          messages: [
+            {
+              role: "system",
+              content: "Return exactly the requested plain text format. No markdown, no code fences, no extra commentary.",
+            },
+            { role: "user", content: prompt },
+          ],
+        }),
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Hugging Face request failed: ${errorText}`);
+      if (!response.ok) {
+        throw new Error(`${model} failed: ${await response.text()}`);
+      }
+
+      const payload = await response.json();
+      const text = extractAssistantText(payload);
+      if (!text) throw new Error(`${model} returned an empty response`);
+
+      return parseSummary(text);
+    } catch (error) {
+      lastError = error;
+      console.error(`[generate-progress-summary] ${model}:`, error);
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const payload = await response.json();
-    const text = extractAssistantText(payload);
-    if (!text) throw new Error("Hugging Face returned an empty response");
-
-    return parseSummary(text);
-  } finally {
-    clearTimeout(timeout);
   }
+
+  throw lastError ?? new Error("All models failed");
 }
 
 function parseSummary(text: string): ProgressSummaryResult {
